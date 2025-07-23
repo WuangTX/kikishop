@@ -1,0 +1,190 @@
+{% extends 'admin_dashboard/base.html' %}
+
+{% block title %}Quản lý tin tức - KiKi Admin{% endblock %}
+{% block page_title %}Quản lý tin tức{% endblock %}
+
+{% block content %}
+{% csrf_token %}
+<!-- Search and actions -->
+<div class="row mb-4">
+    <div class="col-md-8">
+        <form method="get" class="d-flex gap-3">
+            <div class="flex-grow-1">
+                <input type="search" name="q" class="form-control" placeholder="Tìm kiếm tin tức..." value="{{ query }}">
+            </div>
+            <button type="submit" class="btn btn-outline-primary">
+                <i class="fas fa-search"></i>
+            </button>
+        </form>
+    </div>
+    <div class="col-md-4 text-end">
+        <a href="{% url 'admin_dashboard:news_add' %}" class="btn btn-primary">
+            <i class="fas fa-plus me-2"></i>Viết tin tức
+        </a>
+    </div>
+</div>
+
+<!-- News table -->
+<div class="table-card">
+    <div class="table-card-header d-flex justify-content-between align-items-center">
+        <h5 class="table-card-title">
+            Danh sách tin tức 
+            <span class="badge bg-secondary">{{ page_obj.paginator.count }}</span>
+        </h5>
+    </div>
+    
+    <div class="table-responsive">
+        <table class="table table-hover mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th width="80">Ảnh</th>
+                    <th>Tiêu đề</th>
+                    <th width="120">Tác giả</th>
+                    <th width="100">Lượt xem</th>
+                    <th width="100">Trạng thái</th>
+                    <th width="140">Ngày tạo</th>
+                    <th width="150">Thao tác</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for news in page_obj %}
+                <tr>
+                    <td>
+                        {% if news.image %}
+                            <img src="{{ news.image.url }}" class="rounded" width="50" height="50" style="object-fit: cover;">
+                        {% else %}
+                            <div class="bg-light rounded d-flex align-items-center justify-content-center" style="width: 50px; height: 50px;">
+                                <i class="fas fa-newspaper text-muted"></i>
+                            </div>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <div class="fw-semibold">{{ news.title }}</div>
+                        <small class="text-muted">{{ news.summary|truncatechars:60 }}</small>
+                        {% if news.featured %}
+                            <span class="badge bg-warning text-dark ms-1">Nổi bật</span>
+                        {% endif %}
+                        {% if news.category %}
+                            <span class="badge bg-info ms-1">{{ news.category.name }}</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ news.author }}</td>
+                    <td>
+                        <span class="badge bg-info">{{ news.views }}</span>
+                    </td>
+                    <td>
+                        {% if news.status == 'published' %}
+                            <span class="badge bg-success">Đã xuất bản</span>
+                        {% elif news.status == 'draft' %}
+                            <span class="badge bg-secondary">Nháp</span>
+                        {% else %}
+                            <span class="badge bg-warning">{{ news.get_status_display }}</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <div>{{ news.created_at|date:"d/m/Y" }}</div>
+                        {% if news.published_at %}
+                            <small class="text-muted">Xuất bản: {{ news.published_at|date:"d/m" }}</small>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <div class="btn-group" role="group">
+                            <a href="{% url 'admin_dashboard:news_edit' news.id %}" class="btn btn-sm btn-outline-primary" title="Chỉnh sửa">
+                                <i class="fas fa-edit"></i>
+                            </a>
+                            <button type="button" class="btn btn-sm btn-outline-danger" title="Xóa" onclick="deleteNews({{ news.id }}, '{{ news.title }}')">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="7" class="text-center py-5 text-muted">
+                        <i class="fas fa-newspaper fa-3x mb-3 d-block"></i>
+                        <h5>Chưa có tin tức nào</h5>
+                        <p>Hãy viết bài đầu tiên cho website của bạn.</p>
+                        <a href="{% url 'admin_dashboard:news_add' %}" class="btn btn-primary">
+                            <i class="fas fa-plus me-2"></i>Viết tin tức
+                        </a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    
+    <!-- Pagination -->
+    {% if page_obj.has_other_pages %}
+    <div class="d-flex justify-content-center py-3">
+        <nav>
+            <ul class="pagination">
+                {% if page_obj.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page=1{% if query %}&q={{ query }}{% endif %}">Đầu</a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if query %}&q={{ query }}{% endif %}">Trước</a>
+                    </li>
+                {% endif %}
+                
+                <li class="page-item active">
+                    <span class="page-link">{{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</span>
+                </li>
+                
+                {% if page_obj.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if query %}&q={{ query }}{% endif %}">Sau</a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if query %}&q={{ query }}{% endif %}">Cuối</a>
+                    </li>
+                {% endif %}
+            </ul>
+        </nav>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function deleteNews(newsId, newsTitle) {
+    if (confirm(`Bạn có chắc chắn muốn xóa tin tức "${newsTitle}"?`)) {
+        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+        
+        if (!csrfToken) {
+            alert('Không tìm thấy CSRF token');
+            return;
+        }
+        
+        fetch(`/dashboard/news/${newsId}/delete/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': csrfToken,
+                'X-Requested-With': 'XMLHttpRequest',
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data.success) {
+                alert(data.message);
+                location.reload();
+            } else {
+                alert('Lỗi: ' + data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Có lỗi xảy ra: ' + error.message);
+        });
+    }
+}
+</script>
+{% endblock %}

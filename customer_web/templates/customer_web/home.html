@@ -1,0 +1,514 @@
+{% extends 'customer_web/base.html' %}
+{% load static %}
+
+{% block title %}KiKi - Thời trang Hàn Quốc{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="hero-section position-relative overflow-hidden">
+    <div class="hero-bg"></div>
+    <div class="container">
+        <div class="row align-items-center min-vh-75">
+            <div class="col-lg-6 order-2 order-lg-1">
+                <div class="hero-content">
+                    <span class="badge bg-primary-soft text-primary px-3 py-2 mb-3 fs-6">
+                        ✨ Collection 2025
+                    </span>
+                    <h1 class="display-3 fw-bold mb-4 text-gradient">
+                        KiKi Kid's
+                        <span class="text-primary"></span>
+                    </h1>
+                    <p class="lead mb-4 text-muted fs-5">
+                        - Chuyên Thời Trang Trẻ Em
+                        <br>
+                        - Hàng Quảng Châu/ Hàn Quốc/ Thiết Kế
+                        <br>
+                        - Chất lượng - Giá rẻ - Có Sẵn
+                        <br>
+                        - Luôn cập nhật mẫu mã mới nhất
+                    </p>
+                    <div class="hero-stats mb-4">
+                        <div class="row text-center">
+                            <div class="col-3">
+                                <div class="stat-item">
+                                    <img src="{% static 'customer_web/images/quality.jpg' %}" 
+                                           alt="Chất lượng" class="img-fluid mb-2" style="width: 200px;">
+                                </div>
+                            </div>
+                            <div class="col-3">
+                                <div class="stat-item">
+                                    <img src="{% static 'customer_web/images/fast-delivery.jpg' %}" 
+                                           alt="Giao hàng nhanh" class="img-fluid mb-2" style="width: 200px;">
+                                </div>
+                            </div>
+                            <div class="col-3">
+                                <div class="stat-item">
+                                    <img src="{% static 'customer_web/images/rate.jpg' %}" 
+                                           alt="Đánh giá" class="img-fluid mb-2" style="width: 200px;">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="hero-buttons" style="position: relative; z-index: 10;">
+                        <a href="{% url 'customer_web:product_list' %}" class="btn btn-primary btn-lg px-4 py-3 me-3 shadow-lg" style="pointer-events: auto; position: relative; z-index: 10;" onclick="console.log('Button clicked!'); return true;">
+                            <i class="fas fa-shopping-bag me-2"></i>
+                            Mua sắm ngay
+                        </a>
+                        <a href="#categories" class="btn btn-outline-dark btn-lg px-4 py-3" style="pointer-events: auto; position: relative; z-index: 10;">
+                            <i class="fas fa-play-circle me-2"></i>
+                            Khám phá
+                        </a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-6 order-1 order-lg-2">
+                <div class="hero-image-container position-relative">
+                    <!-- Main Hero Image -->
+                    <div class="hero-main-image">
+                        <img src="{% static 'customer_web/images/korean-fashion-hero.jpg' %}" 
+                             class="img-fluid hero-img shadow-lg" 
+                             alt="Korean Fashion 2025"
+                             onerror="this.src='https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=600&h=700&fit=crop&crop=face'">
+                    </div>
+                    
+                    <!-- Floating Cards -->
+                    <div class="floating-card floating-card-1 position-absolute">
+                        <div class="card border-0 shadow-sm">
+                            <div class="card-body p-3 text-center">
+                                <i class="fas fa-shipping-fast text-primary mb-2"></i>
+                                <small class="d-block fw-bold">Giao hàng nhanh</small>
+                                <small class="text-muted">2-3 ngày</small>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="floating-card floating-card-2 position-absolute">
+                        <div class="card border-0 shadow-sm">
+                            <div class="card-body p-3 text-center">
+                                <i class="fas fa-percent text-success mb-2"></i>
+                                <small class="d-block fw-bold">Sale up to</small>
+                                <small class="text-success fw-bold">50%</small>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Decorative Elements -->
+                    <div class="hero-decoration hero-decoration-1"></div>
+                    <div class="hero-decoration hero-decoration-2"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Scroll Indicator -->
+    <div class="scroll-indicator position-absolute bottom-0 start-50 translate-middle-x mb-4">
+        <a href="#categories" class="text-decoration-none">
+            <div class="scroll-mouse">
+                <div class="scroll-wheel"></div>
+            </div>
+            <small class="d-block text-center mt-2 text-muted">Cuộn xuống</small>
+        </a>
+    </div>
+</section>
+
+<!-- Hot Trend Products Section -->
+<section class="py-5" id="hot-trends">
+    <div class="container">
+        <div class="text-center mb-5">
+            <h2 class="display-6 fw-bold text-gradient mb-3">
+                🔥 Sản phẩm Hot Trend
+            </h2>
+            <p class="lead text-muted">Những món đồ đang được săn lùng nhiều nhất</p>
+        </div>
+        <div class="row g-4">
+            {% for product in hot_trend_products %}
+            <div class="col-lg-3 col-md-6 col-6">
+                <div class="card product-card h-100 d-flex flex-column position-relative">
+                    <!-- Hot Badge -->
+                    <span class="badge bg-danger position-absolute" style="top: 10px; left: 10px; z-index: 10; font-size: 0.7rem;">
+                        🔥 HOT
+                    </span>
+                    
+                    {% with product.images.first as primary_image %}
+                    {% if primary_image %}
+                    <img src="{{ primary_image.image.url }}" class="card-img-top" 
+                         alt="{{ product.name }}" style="height: 250px; object-fit: cover; flex-shrink: 0;">
+                    {% else %}
+                    <div class="card-img-top bg-light d-flex align-items-center justify-content-center" style="height: 250px; flex-shrink: 0;">
+                        <i class="fas fa-image fa-3x text-muted"></i>
+                    </div>
+                    {% endif %}
+                    {% endwith %}
+                    
+                    <div class="card-body d-flex flex-column flex-grow-1">
+                        <h6 class="card-title">{{ product.name|truncatechars:30 }}</h6>
+                        <div class="price mb-2">
+                            {% if product.is_on_sale %}
+                            <span class="text-muted text-decoration-line-through me-2">
+                                {{ product.price|floatformat:0 }}₫
+                            </span>
+                            <span class="text-danger fw-bold">
+                                {{ product.discount_price|floatformat:0 }}₫
+                            </span>
+                            <span class="badge bg-warning text-dark ms-1">
+                                -{{ product.discount_percentage }}%
+                            </span>
+                            {% else %}
+                            <span class="text-primary fw-bold">
+                                {{ product.price|floatformat:0 }}₫
+                            </span>
+                            {% endif %}
+                        </div>
+                        
+                        <!-- Popularity indicators -->
+                        <div class="mb-2">
+                            <small class="text-muted">
+                                <i class="fas fa-fire text-danger"></i> Đã bán {{ product.sold_count|default:"100" }}+
+                            </small>
+                        </div>
+                        
+                        <div class="d-grid gap-2 mt-auto">
+                            <a href="{% url 'customer_web:product_detail' product.slug %}" 
+                               class="btn btn-outline-danger btn-sm">Xem chi tiết</a>
+                            <button onclick="addToCart({{ product.id }})" 
+                                    class="btn btn-danger btn-sm">
+                                <i class="fas fa-cart-plus"></i> Thêm vào giỏ
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% empty %}
+            <div class="col-12 text-center">
+                <div class="py-5">
+                    <i class="fas fa-fire fa-3x text-muted mb-3"></i>
+                    <p class="text-muted fs-5">Sản phẩm hot trend đang được cập nhật...</p>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        
+        <div class="text-center mt-5">
+            <a href="{% url 'customer_web:product_list' %}?sort=trending" class="btn btn-outline-danger btn-lg">
+                <i class="fas fa-fire me-2"></i>
+                Xem thêm sản phẩm hot trend
+            </a>
+        </div>
+    </div>
+</section>
+
+<!-- Featured Products -->
+<section class="py-5 bg-light">
+    <div class="container">
+        <div class="row align-items-center mb-5">
+            <div class="col">
+                <h2>Sản phẩm nổi bật</h2>
+                <p class="text-muted">Những món đồ hot nhất được yêu thích</p>
+            </div>
+            <div class="col-auto">
+                <a href="{% url 'customer_web:product_list' %}" class="btn btn-outline-primary">
+                    Xem tất cả <i class="fas fa-arrow-right ms-1"></i>
+                </a>
+            </div>
+        </div>
+        
+        <div class="row g-4">
+            {% for product in featured_products %}
+            <div class="col-lg-3 col-md-6 col-6">
+                <div class="card product-card h-100 d-flex flex-column">
+                    {% with product.images.first as primary_image %}
+                    {% if primary_image %}
+                    <img src="{{ primary_image.image.url }}" class="card-img-top" 
+                         alt="{{ product.name }}" style="height: 250px; object-fit: cover; flex-shrink: 0;">
+                    {% else %}
+                    <div class="card-img-top bg-light d-flex align-items-center justify-content-center" style="height: 250px; flex-shrink: 0;">
+                        <i class="fas fa-image fa-3x text-muted"></i>
+                    </div>
+                    {% endif %}
+                    {% endwith %}
+                    
+                    <div class="card-body d-flex flex-column flex-grow-1">
+                        <h6 class="card-title">{{ product.name|truncatechars:30 }}</h6>
+                        <div class="price mb-2">
+                            {% if product.is_on_sale %}
+                            <span class="text-muted text-decoration-line-through me-2">
+                                {{ product.price|floatformat:0 }}₫
+                            </span>
+                            <span class="text-primary fw-bold">
+                                {{ product.discount_price|floatformat:0 }}₫
+                            </span>
+                            {% else %}
+                            <span class="text-primary fw-bold">
+                                {{ product.price|floatformat:0 }}₫
+                            </span>
+                            {% endif %}
+                        </div>
+                        <div class="d-grid gap-2 mt-auto">
+                            <a href="{% url 'customer_web:product_detail' product.slug %}" 
+                               class="btn btn-outline-primary btn-sm">Xem chi tiết</a>
+                            <button onclick="addToCart({{ product.id }})" 
+                                    class="btn btn-primary btn-sm">
+                                <i class="fas fa-cart-plus"></i> Thêm vào giỏ
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% empty %}
+            <div class="col-12 text-center">
+                <p class="text-muted">Chưa có sản phẩm nổi bật nào.</p>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+<!-- New Products -->
+<section class="py-5">
+    <div class="container">
+        <div class="row align-items-center mb-5">
+            <div class="col">
+                <h2>Sản phẩm mới</h2>
+                <p class="text-muted">Xu hướng thời trang mới nhất từ Hàn Quốc</p>
+            </div>
+            <div class="col-auto">
+                <a href="{% url 'customer_web:product_list' %}?sort=newest" class="btn btn-outline-secondary">
+                    Xem tất cả <i class="fas fa-arrow-right ms-1"></i>
+                </a>
+            </div>
+        </div>
+        
+        <div class="row g-4">
+            {% for product in new_products %}
+            <div class="col-lg-3 col-md-6 col-6">
+                <div class="card product-card h-100 d-flex flex-column">
+                    {% with product.images.first as primary_image %}
+                    {% if primary_image %}
+                    <img src="{{ primary_image.image.url }}" class="card-img-top" 
+                         alt="{{ product.name }}" style="height: 250px; object-fit: cover; flex-shrink: 0;">
+                    {% else %}
+                    <div class="card-img-top bg-light d-flex align-items-center justify-content-center" style="height: 250px; flex-shrink: 0;">
+                        <i class="fas fa-image fa-3x text-muted"></i>
+                    </div>
+                    {% endif %}
+                    {% endwith %}
+                    
+                    <div class="card-body d-flex flex-column flex-grow-1">
+                        <span class="badge bg-success mb-2 align-self-start">Mới</span>
+                        <h6 class="card-title">{{ product.name|truncatechars:30 }}</h6>
+                        <div class="price mb-2">
+                            {% if product.is_on_sale %}
+                            <span class="text-muted text-decoration-line-through me-2">
+                                {{ product.price|floatformat:0 }}₫
+                            </span>
+                            <span class="text-primary fw-bold">
+                                {{ product.discount_price|floatformat:0 }}₫
+                            </span>
+                            {% else %}
+                            <span class="text-primary fw-bold">
+                                {{ product.price|floatformat:0 }}₫
+                            </span>
+                            {% endif %}
+                        </div>
+                        <div class="d-grid gap-2 mt-auto">
+                            <a href="{% url 'customer_web:product_detail' product.slug %}" 
+                               class="btn btn-outline-primary btn-sm">Xem chi tiết</a>
+                            <button onclick="addToCart({{ product.id }})" 
+                                    class="btn btn-primary btn-sm">
+                                <i class="fas fa-cart-plus"></i> Thêm vào giỏ
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% empty %}
+            <div class="col-12 text-center">
+                <p class="text-muted">Chưa có sản phẩm mới nào.</p>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+<!-- Featured News -->
+{% if featured_news %}
+<section class="py-5 bg-light">
+    <div class="container">
+        <div class="row align-items-center mb-5">
+            <div class="col">
+                <h2>Tin tức thời trang</h2>
+                <p class="text-muted">Cập nhật xu hướng và thông tin mới nhất</p>
+            </div>
+            <div class="col-auto">
+                <a href="{% url 'customer_web:news_list' %}" class="btn btn-outline-secondary">
+                    Xem tất cả <i class="fas fa-arrow-right ms-1"></i>
+                </a>
+            </div>
+        </div>
+        
+        <div class="row g-4">
+            {% for news in featured_news %}
+            <div class="col-lg-4 col-md-6">
+                <div class="card news-card h-100 shadow-sm">
+                    {% if news.image %}
+                    <img src="{{ news.image.url }}" class="card-img-top" 
+                         alt="{{ news.title }}" style="height: 200px; object-fit: cover;">
+                    {% else %}
+                    <div class="card-img-top bg-light d-flex align-items-center justify-content-center" 
+                         style="height: 200px;">
+                        <i class="fas fa-newspaper fa-3x text-muted"></i>
+                    </div>
+                    {% endif %}
+                    
+                    <div class="card-body d-flex flex-column">
+                        <span class="badge bg-info mb-2 align-self-start">Tin tức</span>
+                        <h6 class="card-title">{{ news.title|truncatechars:50 }}</h6>
+                        <p class="card-text text-muted flex-grow-1">
+                            {{ news.summary|truncatewords:15|striptags }}
+                        </p>
+                        <div class="mt-auto">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <small class="text-muted">
+                                    <i class="fas fa-calendar"></i> {{ news.created_at|date:"d/m/Y" }}
+                                </small>
+                                <small class="text-muted">
+                                    <i class="fas fa-eye"></i> {{ news.views }}
+                                </small>
+                            </div>
+                            <a href="{% url 'customer_web:news_detail' news.slug %}" 
+                               class="btn btn-outline-primary btn-sm w-100">
+                                Đọc thêm <i class="fas fa-arrow-right"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endif %}
+
+<!-- Newsletter -->
+<section class="py-5 bg-primary text-white">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-lg-6">
+                <h3>Đăng ký nhận tin</h3>
+                <p>Nhận thông tin về sản phẩm mới và khuyến mãi đặc biệt</p>
+            </div>
+            <div class="col-lg-6">
+                <div class="row g-2">
+                    <div class="col">
+                        <input type="email" class="form-control" placeholder="Email của bạn...">
+                    </div>
+                    <div class="col-auto">
+                        <button class="btn btn-light">Đăng ký</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<style>
+/* Fix button clickability issues */
+.hero-buttons {
+    position: relative !important;
+    z-index: 100 !important;
+}
+
+.hero-buttons a {
+    position: relative !important;
+    z-index: 101 !important;
+    pointer-events: auto !important;
+    display: inline-block !important;
+}
+
+.hero-section .hero-bg {
+    pointer-events: none !important;
+}
+
+.hero-decoration {
+    pointer-events: none !important;
+}
+
+.floating-card {
+    pointer-events: none !important;
+}
+
+/* Make all product cards equal height */
+.product-card.h-100 {
+    height: 100% !important;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.product-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+}
+
+.product-card .card-body {
+    display: flex !important;
+    flex-direction: column !important;
+    height: 100% !important;
+}
+
+.product-card .card-text {
+    flex-grow: 1 !important;
+    min-height: 60px;
+}
+
+.product-card .mt-auto {
+    margin-top: auto !important;
+}
+
+/* Hot trend product styling */
+#hot-trends .product-card {
+    border: 2px solid transparent;
+    transition: all 0.3s ease;
+}
+
+#hot-trends .product-card:hover {
+    border-color: #dc3545;
+    transform: translateY(-8px) scale(1.02);
+}
+
+#hot-trends .badge {
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+    100% { transform: scale(1); }
+}
+
+/* Ensure consistent card heights across all sections */
+@media (max-width: 576px) {
+    .product-card .card-body {
+        padding: 1rem 0.75rem;
+    }
+    
+    .product-card .card-title {
+        font-size: 0.9rem;
+        margin-bottom: 0.5rem;
+    }
+    
+    .product-card .card-text {
+        font-size: 0.85rem;
+        min-height: 50px;
+    }
+    
+    .product-card .btn {
+        font-size: 0.8rem;
+        padding: 0.5rem 0.75rem;
+    }
+    
+    .product-card img,
+    .product-card .card-img-top {
+        height: 150px !important;
+    }
+}
+</style>
+{% endblock %}

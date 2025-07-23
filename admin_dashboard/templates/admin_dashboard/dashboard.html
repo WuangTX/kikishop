@@ -1,0 +1,198 @@
+{% extends 'admin_dashboard/base.html' %}
+
+{% block title %}Dashboard - KiKi Admin{% endblock %}
+{% block page_title %}Dashboard{% endblock %}
+
+{% block content %}
+<div class="row g-4 mb-4">
+    <!-- Thống kê cards -->
+    <div class="col-xl-3 col-md-6">
+        <div class="stat-card">
+            <div class="stat-card-icon" style="background-color: rgba(99, 102, 241, 0.1); color: var(--primary-color);">
+                <i class="fas fa-box"></i>
+            </div>
+            <div class="stat-card-value text-primary">{{ total_products }}</div>
+            <div class="stat-card-label">Tổng sản phẩm</div>
+        </div>
+    </div>
+    
+    <div class="col-xl-3 col-md-6">
+        <div class="stat-card">
+            <div class="stat-card-icon" style="background-color: rgba(16, 185, 129, 0.1); color: var(--success-color);">
+                <i class="fas fa-shopping-cart"></i>
+            </div>
+            <div class="stat-card-value text-success">{{ total_orders }}</div>
+            <div class="stat-card-label">Tổng đơn hàng</div>
+        </div>
+    </div>
+    
+    <div class="col-xl-3 col-md-6">
+        <div class="stat-card">
+            <div class="stat-card-icon" style="background-color: rgba(245, 158, 11, 0.1); color: var(--warning-color);">
+                <i class="fas fa-users"></i>
+            </div>
+            <div class="stat-card-value text-warning">{{ total_customers }}</div>
+            <div class="stat-card-label">Khách hàng</div>
+        </div>
+    </div>
+    
+    <div class="col-xl-3 col-md-6">
+        <div class="stat-card">
+            <div class="stat-card-icon" style="background-color: rgba(139, 92, 246, 0.1); color: var(--secondary-color);">
+                <i class="fas fa-money-bill-wave"></i>
+            </div>
+            <div class="stat-card-value text-secondary">{{ total_revenue|floatformat:0 }}₫</div>
+            <div class="stat-card-label">Tổng doanh thu</div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4 mb-4">
+    <!-- Thống kê tháng này -->
+    <div class="col-md-6">
+        <div class="stat-card">
+            <h5 class="mb-3">
+                <i class="fas fa-calendar-alt me-2 text-primary"></i>
+                Thống kê tháng này
+            </h5>
+            <div class="row">
+                <div class="col-6">
+                    <div class="text-center">
+                        <div class="h3 text-primary mb-1">{{ monthly_orders }}</div>
+                        <small class="text-muted">Đơn hàng mới</small>
+                    </div>
+                </div>
+                <div class="col-6">
+                    <div class="text-center">
+                        <div class="h3 text-success mb-1">{{ monthly_revenue|floatformat:0 }}₫</div>
+                        <small class="text-muted">Doanh thu</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Quick actions -->
+    <div class="col-md-6">
+        <div class="stat-card">
+            <h5 class="mb-3">
+                <i class="fas fa-bolt me-2 text-warning"></i>
+                Thao tác nhanh
+            </h5>
+            <div class="d-grid gap-2">
+                <a href="{% url 'admin_dashboard:product_add' %}" class="btn btn-primary">
+                    <i class="fas fa-plus me-2"></i>Thêm sản phẩm mới
+                </a>
+                <a href="{% url 'admin_dashboard:news_add' %}" class="btn btn-outline-primary">
+                    <i class="fas fa-newspaper me-2"></i>Viết tin tức
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4">
+    <!-- Đơn hàng gần đây -->
+    <div class="col-lg-8">
+        <div class="table-card">
+            <div class="table-card-header d-flex justify-content-between align-items-center">
+                <h5 class="table-card-title">Đơn hàng gần đây</h5>
+                <a href="{% url 'admin_dashboard:order_list' %}" class="btn btn-sm btn-outline-primary">
+                    Xem tất cả
+                </a>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Mã đơn</th>
+                            <th>Khách hàng</th>
+                            <th>Tổng tiền</th>
+                            <th>Trạng thái</th>
+                            <th>Ngày tạo</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for order in recent_orders %}
+                        <tr>
+                            <td>
+                                <a href="{% url 'admin_dashboard:order_detail' order.id %}" class="text-decoration-none">
+                                    #{{ order.order_id.hex|slice:":8" }}
+                                </a>
+                            </td>
+                            <td>{{ order.full_name }}</td>
+                            <td>{{ order.total_amount|floatformat:0 }}₫</td>
+                            <td>
+                                <span class="badge status-{{ order.status }}">
+                                    {{ order.get_status_display }}
+                                </span>
+                            </td>
+                            <td>{{ order.created_at|date:"d/m/Y H:i" }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="5" class="text-center py-4 text-muted">
+                                <i class="fas fa-inbox fa-2x mb-2 d-block"></i>
+                                Chưa có đơn hàng nào
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Sản phẩm bán chạy -->
+    <div class="col-lg-4">
+        <div class="table-card">
+            <div class="table-card-header">
+                <h5 class="table-card-title">Sản phẩm bán chạy</h5>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Sản phẩm</th>
+                            <th>Đã bán</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for product in bestsellers %}
+                        <tr>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <div class="flex-shrink-0">
+                                        {% if product.images.exists %}
+                                            <img src="{{ product.images.first.image.url }}" class="rounded" width="40" height="40" style="object-fit: cover;">
+                                        {% else %}
+                                            <div class="bg-light rounded d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                                                <i class="fas fa-image text-muted"></i>
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                    <div class="flex-grow-1 ms-3">
+                                        <div class="fw-semibold">{{ product.name|truncatechars:30 }}</div>
+                                        <small class="text-muted">{{ product.get_price|floatformat:0 }}₫</small>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <span class="badge bg-success">{{ product.total_sold|default:0 }}</span>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="2" class="text-center py-4 text-muted">
+                                <i class="fas fa-chart-line fa-2x mb-2 d-block"></i>
+                                Chưa có dữ liệu
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

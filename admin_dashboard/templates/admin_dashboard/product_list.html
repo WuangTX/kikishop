@@ -1,0 +1,186 @@
+{% extends 'admin_dashboard/base.html' %}
+
+{% block title %}Quản lý sản phẩm - KiKi Admin{% endblock %}
+{% block page_title %}Quản lý sản phẩm{% endblock %}
+
+{% block content %}
+<!-- Search and filters -->
+<div class="row mb-4">
+    <div class="col-md-8">
+        <form method="get" class="d-flex gap-3">
+            <div class="flex-grow-1">
+                <input type="search" name="q" class="form-control" placeholder="Tìm kiếm sản phẩm..." value="{{ query }}">
+            </div>
+            <div class="flex-shrink-0">
+                <select name="category" class="form-select">
+                    <option value="">Tất cả danh mục</option>
+                    {% for category in categories %}
+                        <option value="{{ category.id }}" {% if category.id|stringformat:'s' == selected_category %}selected{% endif %}>
+                            {{ category.name }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <button type="submit" class="btn btn-outline-primary">
+                <i class="fas fa-search"></i>
+            </button>
+        </form>
+    </div>
+    <div class="col-md-4 text-end">
+        <a href="{% url 'admin_dashboard:product_add' %}" class="btn btn-primary">
+            <i class="fas fa-plus me-2"></i>Thêm sản phẩm
+        </a>
+    </div>
+</div>
+
+<!-- Products table -->
+<div class="table-card">
+    <div class="table-card-header d-flex justify-content-between align-items-center">
+        <h5 class="table-card-title">
+            Danh sách sản phẩm 
+            <span class="badge bg-secondary">{{ page_obj.paginator.count }}</span>
+        </h5>
+    </div>
+    
+    <div class="table-responsive">
+        <table class="table table-hover mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th width="80">Ảnh</th>
+                    <th>Tên sản phẩm</th>
+                    <th>Danh mục</th>
+                    <th width="120">Giá</th>
+                    <th width="80">Tồn kho</th>
+                    <th width="100">Trạng thái</th>
+                    <th width="150">Thao tác</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for product in page_obj %}
+                <tr>
+                    <td>
+                        {% if product.images.exists %}
+                            <img src="{{ product.images.first.image.url }}" class="rounded" width="50" height="50" style="object-fit: cover;">
+                        {% else %}
+                            <div class="bg-light rounded d-flex align-items-center justify-content-center" style="width: 50px; height: 50px;">
+                                <i class="fas fa-image text-muted"></i>
+                            </div>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <div class="fw-semibold">{{ product.name }}</div>
+                        <small class="text-muted">{{ product.description|truncatechars:50 }}</small>
+                        {% if product.is_featured %}
+                            <span class="badge bg-warning text-dark ms-1">Nổi bật</span>
+                        {% endif %}
+                        {% if product.is_hot_trend %}
+                            <span class="badge bg-danger ms-1">🔥 Hot Trend</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ product.category.name }}</td>
+                    <td>
+                        {% if product.discount_price %}
+                            <div class="text-decoration-line-through text-muted small">{{ product.price|floatformat:0 }}₫</div>
+                            <div class="fw-semibold text-danger">{{ product.discount_price|floatformat:0 }}₫</div>
+                        {% else %}
+                            <div class="fw-semibold">{{ product.price|floatformat:0 }}₫</div>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <span class="badge {% if product.stock > 10 %}bg-success{% elif product.stock > 0 %}bg-warning{% else %}bg-danger{% endif %}">
+                            {{ product.stock }}
+                        </span>
+                    </td>
+                    <td>
+                        {% if product.is_active %}
+                            <span class="badge bg-success">Kích hoạt</span>
+                        {% else %}
+                            <span class="badge bg-secondary">Ẩn</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <div class="btn-group" role="group">
+                            <a href="{% url 'admin_dashboard:product_edit' product.id %}" class="btn btn-sm btn-outline-primary" title="Chỉnh sửa">
+                                <i class="fas fa-edit"></i>
+                            </a>
+                            <button type="button" class="btn btn-sm btn-outline-danger" title="Xóa" onclick="deleteProduct({{ product.id }}, '{{ product.name }}')">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="7" class="text-center py-5 text-muted">
+                        <i class="fas fa-box fa-3x mb-3 d-block"></i>
+                        <h5>Không có sản phẩm nào</h5>
+                        <p>Hãy thêm sản phẩm đầu tiên cho cửa hàng của bạn.</p>
+                        <a href="{% url 'admin_dashboard:product_add' %}" class="btn btn-primary">
+                            <i class="fas fa-plus me-2"></i>Thêm sản phẩm
+                        </a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    
+    <!-- Pagination -->
+    {% if page_obj.has_other_pages %}
+    <div class="d-flex justify-content-center py-3">
+        <nav>
+            <ul class="pagination">
+                {% if page_obj.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page=1{% if query %}&q={{ query }}{% endif %}{% if selected_category %}&category={{ selected_category }}{% endif %}">Đầu</a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if query %}&q={{ query }}{% endif %}{% if selected_category %}&category={{ selected_category }}{% endif %}">Trước</a>
+                    </li>
+                {% endif %}
+                
+                <li class="page-item active">
+                    <span class="page-link">{{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</span>
+                </li>
+                
+                {% if page_obj.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if query %}&q={{ query }}{% endif %}{% if selected_category %}&category={{ selected_category }}{% endif %}">Sau</a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if query %}&q={{ query }}{% endif %}{% if selected_category %}&category={{ selected_category }}{% endif %}">Cuối</a>
+                    </li>
+                {% endif %}
+            </ul>
+        </nav>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function deleteProduct(productId, productName) {
+    if (confirm(`Bạn có chắc chắn muốn xóa sản phẩm "${productName}"?`)) {
+        fetch(`/dashboard/products/${productId}/delete/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert('Lỗi: ' + data.message);
+            }
+        })
+        .catch(error => {
+            alert('Có lỗi xảy ra: ' + error);
+        });
+    }
+}
+</script>
+{% endblock %}

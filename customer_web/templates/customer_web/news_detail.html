@@ -1,0 +1,318 @@
+{% extends 'customer_web/base.html' %}
+{% load static %}
+
+{% block title %}{{ news.title }} - Tin tức - KiKi{% endblock %}
+
+{% block extra_css %}
+<style>
+/* News content styling for CKEditor output */
+.news-content {
+    line-height: 1.8;
+    font-size: 16px;
+    color: #333;
+}
+
+.news-content h1 {
+    font-size: 2rem;
+    font-weight: bold;
+    margin: 2rem 0 1rem 0;
+    color: #2c3e50;
+    border-bottom: 2px solid #3498db;
+    padding-bottom: 0.5rem;
+}
+
+.news-content h2 {
+    font-size: 1.75rem;
+    font-weight: bold;
+    margin: 1.75rem 0 1rem 0;
+    color: #34495e;
+}
+
+.news-content h3 {
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin: 1.5rem 0 0.75rem 0;
+    color: #34495e;
+}
+
+.news-content h4 {
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin: 1.25rem 0 0.75rem 0;
+    color: #34495e;
+}
+
+.news-content p {
+    margin: 1rem 0;
+    text-align: justify;
+}
+
+.news-content blockquote {
+    border-left: 4px solid #3498db;
+    margin: 1.5rem 0;
+    padding: 1rem 1.5rem;
+    background: #f8f9fa;
+    font-style: italic;
+    border-radius: 0 8px 8px 0;
+}
+
+.news-content blockquote p {
+    margin: 0.5rem 0;
+    color: #555;
+}
+
+.news-content ul, .news-content ol {
+    margin: 1rem 0;
+    padding-left: 2rem;
+}
+
+.news-content li {
+    margin: 0.5rem 0;
+}
+
+.news-content table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 1.5rem 0;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.news-content table th {
+    background: #3498db;
+    color: white;
+    padding: 1rem;
+    text-align: left;
+    font-weight: 600;
+}
+
+.news-content table td {
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid #ecf0f1;
+}
+
+.news-content table tr:nth-child(even) {
+    background: #f8f9fa;
+}
+
+.news-content table tr:hover {
+    background: #e3f2fd;
+}
+
+.news-content img {
+    max-width: 100%;
+    height: auto;
+    border-radius: 8px;
+    margin: 1rem 0;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+.news-content a {
+    color: #3498db;
+    text-decoration: none;
+    border-bottom: 1px solid transparent;
+    transition: all 0.3s ease;
+}
+
+.news-content a:hover {
+    color: #2980b9;
+    border-bottom-color: #2980b9;
+}
+
+.news-content strong {
+    font-weight: 600;
+    color: #2c3e50;
+}
+
+.news-content code {
+    background: #f8f9fa;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    font-family: 'Courier New', monospace;
+    font-size: 0.9em;
+    color: #e74c3c;
+}
+
+.news-content pre {
+    background: #2c3e50;
+    color: #ecf0f1;
+    padding: 1rem;
+    border-radius: 8px;
+    overflow-x: auto;
+    margin: 1rem 0;
+}
+
+.news-content pre code {
+    background: none;
+    color: inherit;
+    padding: 0;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .news-content {
+        font-size: 15px;
+        line-height: 1.6;
+    }
+    
+    .news-content h1 {
+        font-size: 1.75rem;
+    }
+    
+    .news-content h2 {
+        font-size: 1.5rem;
+    }
+    
+    .news-content h3 {
+        font-size: 1.25rem;
+    }
+    
+    .news-content table {
+        font-size: 0.9rem;
+    }
+    
+    .news-content blockquote {
+        padding: 0.75rem 1rem;
+        margin: 1rem 0;
+    }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row">
+        <div class="col-lg-8">
+            <!-- Breadcrumb -->
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{% url 'customer_web:home' %}">Trang chủ</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'customer_web:news_list' %}">Tin tức</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">{{ news.title|truncatechars:50 }}</li>
+                </ol>
+            </nav>
+            
+            <!-- News Content -->
+            <article class="card shadow-sm">
+                {% if news.image %}
+                <img src="{{ news.image.url }}" class="card-img-top" alt="{{ news.title }}" 
+                     style="max-height: 400px; object-fit: cover;">
+                {% endif %}
+                
+                <div class="card-body">
+                    <h1 class="card-title h2 mb-3">{{ news.title }}</h1>
+                    
+                    <div class="d-flex justify-content-between align-items-center mb-4 text-muted">
+                        <div>
+                            <i class="fas fa-calendar"></i>
+                            <span>Ngày đăng: {{ news.created_at|date:"d/m/Y H:i" }}</span>
+                        </div>
+                        <div>
+                            <i class="fas fa-eye"></i>
+                            <span>{{ news.views }} lượt xem</span>
+                        </div>
+                    </div>
+                    
+                    {% if news.updated_at != news.created_at %}
+                    <div class="mb-3">
+                        <small class="text-muted">
+                            <i class="fas fa-edit"></i>
+                            Cập nhật lần cuối: {{ news.updated_at|date:"d/m/Y H:i" }}
+                        </small>
+                    </div>
+                    {% endif %}
+                    
+                    <div class="news-content">
+                        {{ news.content|safe }}
+                    </div>
+                    
+                    <hr class="my-4">
+                    
+                    <!-- Back to News List -->
+                    <div class="text-center">
+                        <a href="{% url 'customer_web:news_list' %}" class="btn btn-outline-primary">
+                            <i class="fas fa-arrow-left"></i> Quay lại danh sách tin tức
+                        </a>
+                    </div>
+                </div>
+            </article>
+        </div>
+        
+        <!-- Sidebar -->
+        <div class="col-lg-4">
+            <div class="sticky-top" style="top: 20px;">
+                <!-- Related News -->
+                {% if related_news %}
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-newspaper"></i> Tin tức liên quan
+                        </h5>
+                    </div>
+                    <div class="card-body p-0">
+                        {% for related in related_news %}
+                        <div class="border-bottom p-3">
+                            <div class="row g-0">
+                                {% if related.image %}
+                                <div class="col-4">
+                                    <img src="{{ related.image.url }}" class="img-fluid rounded" 
+                                         alt="{{ related.title }}" style="height: 60px; object-fit: cover; width: 100%;">
+                                </div>
+                                <div class="col-8 ps-3">
+                                {% else %}
+                                <div class="col-12">
+                                {% endif %}
+                                    <h6 class="mb-1">
+                                        <a href="{% url 'customer_web:news_detail' related.slug %}" 
+                                           class="text-decoration-none">
+                                            {{ related.title|truncatechars:50 }}
+                                        </a>
+                                    </h6>
+                                    <small class="text-muted">
+                                        <i class="fas fa-calendar"></i> {{ related.created_at|date:"d/m/Y" }}
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+                
+                <!-- Latest Products -->
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-star"></i> Sản phẩm nổi bật
+                        </h5>
+                    </div>
+                    <div class="card-body p-0">
+                        <!-- You can add featured products here -->
+                        <div class="text-center p-3">
+                            <a href="{% url 'customer_web:product_list' %}" class="btn btn-primary btn-sm">
+                                <i class="fas fa-shopping-bag"></i> Xem sản phẩm
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.news-content {
+    line-height: 1.8;
+    font-size: 1.1rem;
+}
+
+.news-content p {
+    margin-bottom: 1.5rem;
+}
+
+.sticky-top {
+    z-index: 1020;
+}
+</style>
+{% endblock %}

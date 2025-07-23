@@ -1,0 +1,618 @@
+{% extends 'admin_dashboard/base.html' %}
+{% load static %}
+
+{% block title %}
+    {% if action == 'add' %}Viết tin tức{% else %}Chỉnh sửa tin tức{% endif %} - KiKi Admin
+{% endblock %}
+
+{% block page_title %}
+    {% if action == 'add' %}Viết tin tức mới{% else %}Chỉnh sửa tin tức{% endif %}
+{% endblock %}
+
+{% block extra_css %}
+<!-- Include CKEditor 5 from CDN -->
+<script src="https://cdn.ckeditor.com/ckeditor5/40.2.0/classic/ckeditor.js"></script>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="table-card">
+            <div class="table-card-header">
+                <h5 class="table-card-title">
+                    {% if action == 'add' %}
+                        <i class="fas fa-plus me-2"></i>Viết tin tức mới
+                    {% else %}
+                        <i class="fas fa-edit me-2"></i>Chỉnh sửa tin tức
+                    {% endif %}
+                </h5>
+            </div>
+            
+            <div class="p-4">
+                <form method="post" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    
+                    <div class="row g-3">
+                        <!-- Danh mục -->
+                        <div class="col-md-6">
+                            <label for="{{ form.category.id_for_label }}" class="form-label">Danh mục <span class="text-danger">*</span></label>
+                            {{ form.category }}
+                            {% if form.category.errors %}
+                                <div class="text-danger">{{ form.category.errors }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        <!-- Trạng thái -->
+                        <div class="col-md-6">
+                            <label for="{{ form.status.id_for_label }}" class="form-label">Trạng thái</label>
+                            {{ form.status }}
+                            {% if form.status.errors %}
+                                <div class="text-danger">{{ form.status.errors }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        <!-- Tiêu đề -->
+                        <div class="col-12">
+                            <label for="{{ form.title.id_for_label }}" class="form-label">Tiêu đề bài viết <span class="text-danger">*</span></label>
+                            {{ form.title }}
+                            {% if form.title.errors %}
+                                <div class="text-danger">{{ form.title.errors }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        <!-- Slug -->
+                        <div class="col-12">
+                            <label for="{{ form.slug.id_for_label }}" class="form-label">URL Slug</label>
+                            {{ form.slug }}
+                            <small class="form-text text-muted">Để trống để tự động tạo từ tiêu đề</small>
+                            {% if form.slug.errors %}
+                                <div class="text-danger">{{ form.slug.errors }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        <!-- Tóm tắt -->
+                        <div class="col-12">
+                            <label for="{{ form.summary.id_for_label }}" class="form-label">Tóm tắt <span class="text-danger">*</span></label>
+                            {{ form.summary }}
+                            {% if form.summary.errors %}
+                                <div class="text-danger">{{ form.summary.errors }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        <!-- Hình ảnh chính -->
+                        <div class="col-md-6">
+                            <label for="{{ form.image.id_for_label }}" class="form-label">Hình ảnh chính</label>
+                            {{ form.image }}
+                            {% if news and news.image %}
+                                <div class="mt-2">
+                                    <img src="{{ news.image.url }}" class="img-thumbnail" style="max-height: 150px;">
+                                    <small class="form-text text-muted d-block">Hình ảnh hiện tại</small>
+                                </div>
+                            {% endif %}
+                            {% if form.image.errors %}
+                                <div class="text-danger">{{ form.image.errors }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        <!-- Vị trí hình ảnh -->
+                        <div class="col-md-6">
+                            <label for="{{ form.image_position.id_for_label }}" class="form-label">Vị trí hình ảnh</label>
+                            {{ form.image_position }}
+                            {% if form.image_position.errors %}
+                                <div class="text-danger">{{ form.image_position.errors }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        <!-- Chú thích hình ảnh -->
+                        <div class="col-12">
+                            <label for="{{ form.image_caption.id_for_label }}" class="form-label">Chú thích hình ảnh</label>
+                            {{ form.image_caption }}
+                            {% if form.image_caption.errors %}
+                                <div class="text-danger">{{ form.image_caption.errors }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        <!-- Nội dung -->
+                        <div class="col-12">
+                            <label for="{{ form.content.id_for_label }}" class="form-label">Nội dung bài viết <span class="text-danger">*</span></label>
+                            {{ form.content }}
+                            {% if form.content.errors %}
+                                <div class="text-danger">{{ form.content.errors }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        <!-- Liên kết ngoài -->
+                        <div class="col-md-6">
+                            <label for="{{ form.external_link.id_for_label }}" class="form-label">Liên kết ngoài</label>
+                            {{ form.external_link }}
+                            {% if form.external_link.errors %}
+                                <div class="text-danger">{{ form.external_link.errors }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        <!-- Văn bản liên kết -->
+                        <div class="col-md-6">
+                            <label for="{{ form.external_link_text.id_for_label }}" class="form-label">Văn bản liên kết</label>
+                            {{ form.external_link_text }}
+                            {% if form.external_link_text.errors %}
+                                <div class="text-danger">{{ form.external_link_text.errors }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        <!-- Tags -->
+                        <div class="col-12">
+                            <label for="{{ form.tags.id_for_label }}" class="form-label">Thẻ (Tags)</label>
+                            {{ form.tags }}
+                            {% if form.tags.errors %}
+                                <div class="text-danger">{{ form.tags.errors }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        <!-- Tác giả -->
+                        <div class="col-md-6">
+                            <label for="{{ form.author.id_for_label }}" class="form-label">Tác giả</label>
+                            {{ form.author }}
+                            {% if form.author.errors %}
+                                <div class="text-danger">{{ form.author.errors }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        <!-- Ngày xuất bản -->
+                        <div class="col-md-6">
+                            <label for="{{ form.published_at.id_for_label }}" class="form-label">Ngày xuất bản</label>
+                            {{ form.published_at }}
+                            {% if form.published_at.errors %}
+                                <div class="text-danger">{{ form.published_at.errors }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        <!-- Checkbox options -->
+                        <div class="col-12">
+                            <div class="form-check">
+                                {{ form.featured }}
+                                <label class="form-check-label" for="{{ form.featured.id_for_label }}">
+                                    Tin nổi bật
+                                </label>
+                            </div>
+                            {% if form.featured.errors %}
+                                <div class="text-danger">{{ form.featured.errors }}</div>
+                            {% endif %}
+                    </div>
+                    
+                    <hr class="my-4">
+                    
+                    <!-- Action buttons -->
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save me-2"></i>
+                            {% if action == 'add' %}Đăng bài{% else %}Cập nhật{% endif %}
+                        </button>
+                        <a href="{% url 'admin_dashboard:news_list' %}" class="btn btn-secondary">
+                            <i class="fas fa-times me-2"></i>Hủy bỏ
+                        </a>
+                        {% if action == 'edit' and news %}
+                            <button type="submit" name="save_draft" class="btn btn-outline-secondary ms-auto">
+                                <i class="fas fa-file-alt me-2"></i>Lưu nháp
+                            </button>
+                        {% endif %}
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Formatting Tips -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="table-card">
+            <div class="table-card-header">
+                <h6 class="table-card-title">
+                    <i class="fas fa-lightbulb me-2"></i>Mẹo viết bài
+                </h6>
+            </div>
+            <div class="p-3">
+                <div class="row">
+                    <div class="col-md-4">
+                        <h6>Tiêu đề hay</h6>
+                        <small>• Ngắn gọn, súc tích<br>
+                        • Chứa từ khóa chính<br>
+                        • Thu hút người đọc</small>
+                    </div>
+                    <div class="col-md-4">
+                        <h6>Tóm tắt hiệu quả</h6>
+                        <small>• Điểm nhấn chính<br>
+                        • Kích thích tò mò<br>
+                        • Tối đa 500 ký tự</small>
+                    </div>
+                    <div class="col-md-4">
+                        <h6>Hình ảnh chất lượng</h6>
+                        <small>• Độ phân giải cao<br>
+                        • Liên quan nội dung<br>
+                        • Kích thước phù hợp</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let editor;
+
+// Initialize CKEditor 5
+ClassicEditor
+    .create(document.querySelector('#{{ form.content.id_for_label }}'), {
+        toolbar: {
+            items: [
+                'heading', '|',
+                'bold', 'italic', 'underline', 'strikethrough', '|',
+                'fontSize', 'fontColor', 'fontBackgroundColor', '|',
+                'link', 'imageUpload', 'mediaEmbed', '|',
+                'bulletedList', 'numberedList', '|',
+                'alignment', 'outdent', 'indent', '|',
+                'insertTable', 'blockQuote', 'codeBlock', '|',
+                'undo', 'redo', '|',
+                'sourceEditing'
+            ],
+            shouldNotGroupWhenFull: true
+        },
+        language: 'vi',
+        image: {
+            toolbar: [
+                'imageTextAlternative',
+                'toggleImageCaption',
+                'imageStyle:inline',
+                'imageStyle:block',
+                'imageStyle:side',
+                'linkImage'
+            ]
+        },
+        table: {
+            contentToolbar: [
+                'tableColumn',
+                'tableRow',
+                'mergeTableCells',
+                'tableCellProperties',
+                'tableProperties'
+            ]
+        },
+        licenseKey: '',
+        heading: {
+            options: [
+                { model: 'paragraph', title: 'Đoạn văn', class: 'ck-heading_paragraph' },
+                { model: 'heading1', view: 'h1', title: 'Tiêu đề 1', class: 'ck-heading_heading1' },
+                { model: 'heading2', view: 'h2', title: 'Tiêu đề 2', class: 'ck-heading_heading2' },
+                { model: 'heading3', view: 'h3', title: 'Tiêu đề 3', class: 'ck-heading_heading3' },
+                { model: 'heading4', view: 'h4', title: 'Tiêu đề 4', class: 'ck-heading_heading4' }
+            ]
+        },
+        fontSize: {
+            options: [
+                9, 10, 11, 12, 13, 14, 15, 16, 18, 20, 22, 24, 26, 28, 30, 32, 34, 36
+            ]
+        },
+        fontColor: {
+            colors: [
+                {
+                    color: 'hsl(0, 0%, 0%)',
+                    label: 'Đen'
+                },
+                {
+                    color: 'hsl(0, 0%, 30%)',
+                    label: 'Xám đậm'
+                },
+                {
+                    color: 'hsl(0, 0%, 60%)',
+                    label: 'Xám'
+                },
+                {
+                    color: 'hsl(0, 0%, 90%)',
+                    label: 'Xám nhạt'
+                },
+                {
+                    color: 'hsl(0, 0%, 100%)',
+                    label: 'Trắng',
+                    hasBorder: true
+                },
+                {
+                    color: 'hsl(0, 75%, 60%)',
+                    label: 'Đỏ'
+                },
+                {
+                    color: 'hsl(30, 75%, 60%)',
+                    label: 'Cam'
+                },
+                {
+                    color: 'hsl(60, 75%, 60%)',
+                    label: 'Vàng'
+                },
+                {
+                    color: 'hsl(90, 75%, 60%)',
+                    label: 'Xanh lá nhạt'
+                },
+                {
+                    color: 'hsl(120, 75%, 60%)',
+                    label: 'Xanh lá'
+                },
+                {
+                    color: 'hsl(150, 75%, 60%)',
+                    label: 'Xanh lục'
+                },
+                {
+                    color: 'hsl(180, 75%, 60%)',
+                    label: 'Xanh lơ'
+                },
+                {
+                    color: 'hsl(210, 75%, 60%)',
+                    label: 'Xanh dương nhạt'
+                },
+                {
+                    color: 'hsl(240, 75%, 60%)',
+                    label: 'Xanh dương'
+                },
+                {
+                    color: 'hsl(270, 75%, 60%)',
+                    label: 'Tím'
+                }
+            ]
+        },
+        link: {
+            decorators: {
+                openInNewTab: {
+                    mode: 'manual',
+                    label: 'Mở trong tab mới',
+                    attributes: {
+                        target: '_blank',
+                        rel: 'noopener noreferrer'
+                    }
+                }
+            }
+        },
+        mediaEmbed: {
+            previewsInData: true
+        }
+    })
+    .then(newEditor => {
+        editor = newEditor;
+        console.log('CKEditor đã được khởi tạo thành công!');
+        
+        // Auto-save every 30 seconds
+        setInterval(() => {
+            const content = editor.getData();
+            if (content && content.length > 100) {
+                console.log('Auto-saving draft...');
+                // You can implement auto-save logic here
+            }
+        }, 30000);
+        
+        // Sync content with form field on change
+        editor.model.document.on('change:data', () => {
+            document.querySelector('#{{ form.content.id_for_label }}').value = editor.getData();
+        });
+    })
+    .catch(error => {
+        console.error('Lỗi khởi tạo CKEditor:', error);
+    });
+
+// Character counter for summary
+const summaryField = document.querySelector('#{{ form.summary.id_for_label }}');
+if (summaryField) {
+    summaryField.addEventListener('input', function() {
+        const maxLength = 500;
+        const currentLength = this.value.length;
+        const remaining = maxLength - currentLength;
+        
+        // Update character count display
+        let counter = this.parentNode.querySelector('.char-counter');
+        if (!counter) {
+            counter = document.createElement('small');
+            counter.className = 'char-counter text-muted';
+            this.parentNode.appendChild(counter);
+        }
+        counter.textContent = `${currentLength}/${maxLength} ký tự`;
+        
+        if (remaining < 0) {
+            counter.classList.add('text-danger');
+            counter.classList.remove('text-muted');
+        } else {
+            counter.classList.add('text-muted');
+            counter.classList.remove('text-danger');
+        }
+    });
+}
+
+// Auto-generate slug from title
+const titleField = document.querySelector('#{{ form.title.id_for_label }}');
+const slugField = document.querySelector('#{{ form.slug.id_for_label }}');
+
+if (titleField && slugField) {
+    titleField.addEventListener('input', function() {
+        if (!slugField.value || slugField.dataset.autoGenerated) {
+            const slug = this.value
+                .toLowerCase()
+                .normalize('NFD')
+                .replace(/[\u0300-\u036f]/g, '') // Remove diacritics
+                .replace(/đ/g, 'd')
+                .replace(/[^a-z0-9\s-]/g, '')
+                .replace(/\s+/g, '-')
+                .replace(/-+/g, '-')
+                .trim('-');
+            slugField.value = slug;
+            slugField.dataset.autoGenerated = 'true';
+        }
+    });
+
+    // Mark slug as manually edited
+    slugField.addEventListener('input', function() {
+        this.dataset.autoGenerated = 'false';
+    });
+}
+
+// Enhanced form validation before submit
+document.querySelector('form').addEventListener('submit', function(e) {
+    // Update content from CKEditor before submit
+    if (editor) {
+        document.querySelector('#{{ form.content.id_for_label }}').value = editor.getData();
+    }
+    
+    // Enhanced validation
+    const title = titleField ? titleField.value.trim() : '';
+    const summary = summaryField ? summaryField.value.trim() : '';
+    const content = editor ? editor.getData().replace(/<[^>]*>/g, '').trim() : '';
+    
+    if (!title) {
+        alert('Vui lòng nhập tiêu đề bài viết');
+        if (titleField) titleField.focus();
+        e.preventDefault();
+        return false;
+    }
+    
+    if (title.length < 10) {
+        alert('Tiêu đề phải có ít nhất 10 ký tự');
+        if (titleField) titleField.focus();
+        e.preventDefault();
+        return false;
+    }
+    
+    if (!summary) {
+        alert('Vui lòng nhập tóm tắt bài viết');
+        if (summaryField) summaryField.focus();
+        e.preventDefault();
+        return false;
+    }
+    
+    if (summary.length > 500) {
+        alert('Tóm tắt không được vượt quá 500 ký tự');
+        if (summaryField) summaryField.focus();
+        e.preventDefault();
+        return false;
+    }
+    
+    if (!content || content.length < 100) {
+        alert('Nội dung bài viết phải có ít nhất 100 ký tự');
+        if (editor) editor.editing.view.focus();
+        e.preventDefault();
+        return false;
+    }
+    
+    // Show loading indicator
+    const submitBtn = this.querySelector('button[type="submit"]');
+    if (submitBtn) {
+        const originalText = submitBtn.innerHTML;
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Đang xử lý...';
+        submitBtn.disabled = true;
+        
+        // Re-enable button after 10 seconds (fallback)
+        setTimeout(function() {
+            submitBtn.innerHTML = originalText;
+            submitBtn.disabled = false;
+        }, 10000);
+    }
+});
+
+// Word count display for content
+setInterval(function() {
+    if (editor) {
+        const content = editor.getData().replace(/<[^>]*>/g, ''); // Remove HTML tags for word count
+        const wordCount = content.split(/\s+/).filter(word => word.length > 0).length;
+        const contentLabel = document.querySelector('label[for="{{ form.content.id_for_label }}"]');
+        
+        if (contentLabel) {
+            // Update or create word count display
+            let wordCounter = document.querySelector('.content-word-count');
+            if (!wordCounter) {
+                wordCounter = document.createElement('small');
+                wordCounter.className = 'content-word-count text-muted ms-2';
+                contentLabel.appendChild(wordCounter);
+            }
+            wordCounter.textContent = `(${wordCount} từ)`;
+        }
+    }
+}, 2000);
+
+// Add custom CSS for CKEditor
+const style = document.createElement('style');
+style.textContent = `
+    .ck-editor__editable {
+        min-height: 400px;
+    }
+    
+    .ck.ck-editor {
+        border: 1px solid #ddd;
+        border-radius: 0.375rem;
+    }
+    
+    .ck.ck-editor.ck-focused {
+        border-color: #86b7fe;
+        box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+    }
+    
+    .ck.ck-toolbar {
+        border-bottom: 1px solid #ddd;
+        background: #f8f9fa;
+    }
+    
+    .ck.ck-content {
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        font-size: 14px;
+        line-height: 1.6;
+    }
+    
+    .ck.ck-content h1 {
+        font-size: 2rem;
+        font-weight: bold;
+        margin: 1rem 0;
+    }
+    
+    .ck.ck-content h2 {
+        font-size: 1.5rem;
+        font-weight: bold;
+        margin: 0.875rem 0;
+    }
+    
+    .ck.ck-content h3 {
+        font-size: 1.25rem;
+        font-weight: bold;
+        margin: 0.75rem 0;
+    }
+    
+    .ck.ck-content h4 {
+        font-size: 1.125rem;
+        font-weight: bold;
+        margin: 0.625rem 0;
+    }
+    
+    .ck.ck-content p {
+        margin: 0.5rem 0;
+    }
+    
+    .ck.ck-content blockquote {
+        border-left: 4px solid #007bff;
+        margin: 1rem 0;
+        padding: 0.5rem 1rem;
+        background: #f8f9fa;
+    }
+    
+    .ck.ck-content table {
+        border-collapse: collapse;
+        margin: 1rem 0;
+        width: 100%;
+    }
+    
+    .ck.ck-content table td,
+    .ck.ck-content table th {
+        border: 1px solid #ddd;
+        padding: 0.5rem;
+    }
+    
+    .ck.ck-content table th {
+        background: #f8f9fa;
+        font-weight: bold;
+    }
+`;
+document.head.appendChild(style);
+</script>
+{% endblock %}

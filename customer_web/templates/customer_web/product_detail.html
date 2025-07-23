@@ -1,0 +1,401 @@
+{% extends 'customer_web/base.html' %}
+{% load static %}
+
+{% block title %}{{ product.name }} - KiKi{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'customer_web:home' %}">Trang chủ</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'customer_web:product_list' %}">Sản phẩm</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'customer_web:product_list' %}?category={{ product.category.slug }}">{{ product.category.name }}</a></li>
+            <li class="breadcrumb-item active">{{ product.name }}</li>
+        </ol>
+    </nav>
+    
+    <div class="row">
+        <!-- Product Images -->
+        <div class="col-lg-6">
+            <div class="product-images">
+                {% if product.images.all %}
+                    <div id="productCarousel" class="carousel slide" data-bs-ride="carousel">
+                        <div class="carousel-inner">
+                            {% for image in product.images.all %}
+                            <div class="carousel-item {% if forloop.first %}active{% endif %}">
+                                <img src="{{ image.image.url }}" class="d-block w-100 rounded" 
+                                     alt="{{ image.alt_text|default:product.name }}" 
+                                     style="height: 500px; object-fit: cover;">
+                            </div>
+                            {% endfor %}
+                        </div>
+                        
+                        {% if product.images.count > 1 %}
+                        <button class="carousel-control-prev" type="button" data-bs-target="#productCarousel" data-bs-slide="prev">
+                            <span class="carousel-control-prev-icon"></span>
+                        </button>
+                        <button class="carousel-control-next" type="button" data-bs-target="#productCarousel" data-bs-slide="next">
+                            <span class="carousel-control-next-icon"></span>
+                        </button>
+                        {% endif %}
+                    </div>
+                    
+                    <!-- Thumbnail navigation -->
+                    {% if product.images.count > 1 %}
+                    <div class="row g-2 mt-3">
+                        {% for image in product.images.all %}
+                        <div class="col-3">
+                            <img src="{{ image.image.url }}" 
+                                 class="img-thumbnail w-100 {% if forloop.first %}border-primary{% endif %}" 
+                                 style="height: 80px; object-fit: cover; cursor: pointer;"
+                                 onclick="goToSlide({{ forloop.counter0 }})"
+                                 id="thumb-{{ forloop.counter0 }}">
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                {% else %}
+                <div class="bg-light rounded d-flex align-items-center justify-content-center" style="height: 500px;">
+                    <i class="fas fa-image fa-5x text-muted"></i>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- Product Info -->
+        <div class="col-lg-6">
+            <div class="product-info">
+                <h1 class="h2 mb-3">{{ product.name }}</h1>
+                
+                <!-- Price -->
+                <div class="price mb-4">
+                    {% if product.is_on_sale %}
+                    <span class="text-muted text-decoration-line-through h4 me-3">
+                        {{ product.price|floatformat:0 }}₫
+                    </span>
+                    <span class="text-primary fw-bold h2">
+                        {{ product.discount_price|floatformat:0 }}₫
+                    </span>
+                    <span class="badge bg-danger ms-2">Sale</span>
+                    {% else %}
+                    <span class="text-primary fw-bold h2">
+                        {{ product.price|floatformat:0 }}₫
+                    </span>
+                    {% endif %}
+                </div>
+                
+                <!-- Stock Status -->
+                <div class="mb-4">
+                    <div id="stock-info">
+                        {% if product.stock > 0 %}
+                        <span class="badge bg-success">
+                            <i class="fas fa-check-circle"></i> Còn hàng ({{ product.stock }} sản phẩm)
+                        </span>
+                        {% else %}
+                        <span class="badge bg-danger">
+                            <i class="fas fa-times-circle"></i> Hết hàng
+                        </span>
+                        {% endif %}
+                    </div>
+                    
+                    <!-- Dynamic inventory display -->
+                    <div id="variant-stock" class="mt-2" style="display: none;">
+                        <div class="alert alert-info mb-0 py-2">
+                            <i class="fas fa-box"></i> 
+                            <span id="stock-text">Vui lòng chọn size và màu để xem số lượng còn lại</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Product Options -->
+                <form id="add-to-cart-form">
+                    <!-- Size Selection -->
+                    {% if sizes_list %}
+                    <div class="mb-4">
+                        <label class="form-label fw-bold">Kích thước:</label>
+                        <div class="size-options">
+                            {% for size in sizes_list %}
+                            <input type="radio" class="btn-check" name="size" id="size-{{ size }}" value="{{ size }}" onchange="updateInventoryInfo()">
+                            <label class="btn btn-outline-secondary me-2 mb-2" for="size-{{ size }}">{{ size }}</label>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endif %}
+                    
+                    <!-- Color Selection -->
+                    {% if colors_list %}
+                    <div class="mb-4">
+                        <label class="form-label fw-bold">Màu sắc:</label>
+                        <div class="color-options">
+                            {% for color in colors_list %}
+                            <input type="radio" class="btn-check" name="color" id="color-{{ color }}" value="{{ color }}" onchange="updateInventoryInfo()">
+                            <label class="btn btn-outline-secondary me-2 mb-2" for="color-{{ color }}">
+                                {{ color|title }}
+                            </label>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endif %}
+                    
+                    <!-- Quantity -->
+                    <div class="mb-4">
+                        <label class="form-label fw-bold">Số lượng:</label>
+                        <div class="input-group" style="width: 150px;">
+                            <button class="btn btn-outline-secondary" type="button" onclick="changeQuantity(-1)">-</button>
+                            <input type="number" class="form-control text-center" id="quantity" name="quantity" value="1" min="1" max="{{ product.stock }}">
+                            <button class="btn btn-outline-secondary" type="button" onclick="changeQuantity(1)">+</button>
+                        </div>
+                        <small class="text-muted">Tối đa: <span id="max-quantity">{{ product.stock }}</span> sản phẩm</small>
+                    </div>
+                    
+                    <!-- Add to Cart -->
+                    <div class="d-grid gap-2 mb-4">
+                        {% if product.stock > 0 %}
+                        <button type="button" class="btn btn-primary btn-lg" onclick="addProductToCart()">
+                            <i class="fas fa-cart-plus"></i> Thêm vào giỏ hàng
+                        </button>
+                        {% else %}
+                        <button type="button" class="btn btn-secondary btn-lg" disabled>
+                            <i class="fas fa-times"></i> Hết hàng
+                        </button>
+                        {% endif %}
+                        <button type="button" class="btn btn-outline-primary">
+                            <i class="fas fa-heart"></i> Yêu thích
+                        </button>
+                    </div>
+                </form>
+                
+                <!-- Product Description -->
+                <div class="product-description">
+                    <h5>Mô tả sản phẩm</h5>
+                    <p>{{ product.description|linebreaks }}</p>
+                </div>
+                
+                <!-- Product Details -->
+                <div class="product-details mt-4">
+                    <h6>Thông tin chi tiết:</h6>
+                    <ul class="list-unstyled">
+                        <li><strong>Danh mục:</strong> {{ product.category.name }}</li>
+                        {% if product.sizes %}<li><strong>Size:</strong> {{ product.sizes }}</li>{% endif %}
+                        {% if product.colors %}<li><strong>Màu sắc:</strong> {{ product.colors }}</li>{% endif %}
+                        <li><strong>Mã sản phẩm:</strong> #{{ product.id }}</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Related Products -->
+    {% if related_products %}
+    <section class="py-5">
+        <h3 class="mb-4">Sản phẩm liên quan</h3>
+        <div class="row g-4">
+            {% for product in related_products %}
+            <div class="col-lg-3 col-md-6">
+                <div class="card product-card">
+                    {% with product.images.first as primary_image %}
+                    {% if primary_image %}
+                    <img src="{{ primary_image.image.url }}" class="card-img-top" 
+                         alt="{{ product.name }}" style="height: 200px; object-fit: cover;">
+                    {% else %}
+                    <div class="card-img-top bg-light d-flex align-items-center justify-content-center" style="height: 200px;">
+                        <i class="fas fa-image fa-2x text-muted"></i>
+                    </div>
+                    {% endif %}
+                    {% endwith %}
+                    
+                    <div class="card-body">
+                        <h6 class="card-title">{{ product.name|truncatechars:25 }}</h6>
+                        <div class="price mb-2">
+                            {% if product.is_on_sale %}
+                            <span class="text-muted text-decoration-line-through small me-2">
+                                {{ product.price|floatformat:0 }}₫
+                            </span>
+                            <span class="text-primary fw-bold">
+                                {{ product.discount_price|floatformat:0 }}₫
+                            </span>
+                            {% else %}
+                            <span class="text-primary fw-bold">
+                                {{ product.price|floatformat:0 }}₫
+                            </span>
+                            {% endif %}
+                        </div>
+                        <a href="{% url 'customer_web:product_detail' product.slug %}" 
+                           class="btn btn-outline-primary btn-sm">Xem chi tiết</a>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </section>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Global variables
+const productId = {{ product.id }};
+const inventoryData = {{ inventory_data|safe }};
+let currentStock = 0;
+
+function changeQuantity(delta) {
+    const quantityInput = document.getElementById('quantity');
+    const currentValue = parseInt(quantityInput.value);
+    const newValue = currentValue + delta;
+    const maxValue = currentStock > 0 ? currentStock : parseInt(quantityInput.max);
+    
+    if (newValue >= 1 && newValue <= maxValue) {
+        quantityInput.value = newValue;
+    }
+}
+
+function updateInventoryInfo() {
+    const selectedSize = document.querySelector('input[name="size"]:checked');
+    const selectedColor = document.querySelector('input[name="color"]:checked');
+    const stockInfo = document.getElementById('stock-info');
+    const variantStock = document.getElementById('variant-stock');
+    const stockText = document.getElementById('stock-text');
+    const quantityInput = document.getElementById('quantity');
+    const maxQuantitySpan = document.getElementById('max-quantity');
+    const addToCartBtn = document.querySelector('[onclick="addProductToCart()"]');
+    
+    // Reset quantity input
+    quantityInput.value = 1;
+    
+    if (selectedSize && selectedColor) {
+        const size = selectedSize.value;
+        const color = selectedColor.value;
+        const key = `${size}-${color}`;
+        
+        // Check inventory data
+        if (inventoryData[key] !== undefined) {
+            currentStock = inventoryData[key];
+        } else {
+            currentStock = 0;
+        }
+        
+        // Update UI
+        stockInfo.style.display = 'none';
+        variantStock.style.display = 'block';
+        
+        if (currentStock > 0) {
+            stockText.innerHTML = `<strong>Còn ${currentStock} sản phẩm</strong> cho size <strong>${size}</strong> màu <strong>${color}</strong>`;
+            stockText.parentElement.className = 'alert alert-success mb-0 py-2';
+            quantityInput.max = currentStock;
+            maxQuantitySpan.textContent = currentStock;
+            addToCartBtn.disabled = false;
+            addToCartBtn.innerHTML = '<i class="fas fa-cart-plus"></i> Thêm vào giỏ hàng';
+            addToCartBtn.className = 'btn btn-primary btn-lg';
+        } else {
+            stockText.innerHTML = `<strong>Hết hàng</strong> cho size <strong>${size}</strong> màu <strong>${color}</strong>`;
+            stockText.parentElement.className = 'alert alert-danger mb-0 py-2';
+            quantityInput.max = 0;
+            maxQuantitySpan.textContent = 0;
+            addToCartBtn.disabled = true;
+            addToCartBtn.innerHTML = '<i class="fas fa-times"></i> Hết hàng';
+            addToCartBtn.className = 'btn btn-secondary btn-lg';
+        }
+    } else if (selectedSize || selectedColor) {
+        // Show partial selection info
+        variantStock.style.display = 'block';
+        stockInfo.style.display = 'none';
+        
+        let message = 'Vui lòng chọn ';
+        if (selectedSize && !selectedColor) {
+            message += 'màu sắc';
+        } else if (selectedColor && !selectedSize) {
+            message += 'kích thước';
+        }
+        message += ' để xem số lượng còn lại';
+        
+        stockText.innerHTML = message;
+        stockText.parentElement.className = 'alert alert-info mb-0 py-2';
+        addToCartBtn.disabled = true;
+        addToCartBtn.innerHTML = '<i class="fas fa-cart-plus"></i> Thêm vào giỏ hàng';
+        addToCartBtn.className = 'btn btn-secondary btn-lg';
+        quantityInput.max = {{ product.stock }};
+        maxQuantitySpan.textContent = '{{ product.stock }}';
+    } else {
+        // No selection, show default
+        stockInfo.style.display = 'block';
+        variantStock.style.display = 'none';
+        currentStock = {{ product.stock }};
+        quantityInput.max = currentStock;
+        maxQuantitySpan.textContent = currentStock;
+        
+        if (currentStock > 0) {
+            addToCartBtn.disabled = false;
+            addToCartBtn.innerHTML = '<i class="fas fa-cart-plus"></i> Thêm vào giỏ hàng';
+            addToCartBtn.className = 'btn btn-primary btn-lg';
+        } else {
+            addToCartBtn.disabled = true;
+            addToCartBtn.innerHTML = '<i class="fas fa-times"></i> Hết hàng';
+            addToCartBtn.className = 'btn btn-secondary btn-lg';
+        }
+    }
+}
+
+function goToSlide(index) {
+    const carousel = new bootstrap.Carousel(document.getElementById('productCarousel'));
+    carousel.to(index);
+    
+    // Update thumbnail selection
+    document.querySelectorAll('[id^="thumb-"]').forEach(thumb => {
+        thumb.classList.remove('border-primary');
+        thumb.classList.add('border-light');
+    });
+    document.getElementById(`thumb-${index}`).classList.add('border-primary');
+    document.getElementById(`thumb-${index}`).classList.remove('border-light');
+}
+
+function addProductToCart() {
+    const form = document.getElementById('add-to-cart-form');
+    const formData = new FormData(form);
+    
+    const quantity = document.getElementById('quantity').value;
+    const size = formData.get('size') || '';
+    const color = formData.get('color') || '';
+    
+    // Check if size is required but not selected
+    {% if sizes_list %}
+    if (!size) {
+        showAlert('warning', 'Vui lòng chọn kích thước!');
+        return;
+    }
+    {% endif %}
+    
+    // Check if color is required but not selected
+    {% if colors_list %}
+    if (!color) {
+        showAlert('warning', 'Vui lòng chọn màu sắc!');
+        return;
+    }
+    {% endif %}
+    
+    // Check stock availability
+    if (currentStock <= 0) {
+        showAlert('error', 'Sản phẩm này hiện đã hết hàng!');
+        return;
+    }
+    
+    if (parseInt(quantity) > currentStock) {
+        showAlert('warning', `Chỉ còn ${currentStock} sản phẩm. Vui lòng giảm số lượng!`);
+        return;
+    }
+    
+    addToCart({{ product.id }}, size, color, parseInt(quantity));
+}
+
+// Initialize on page load
+document.addEventListener('DOMContentLoaded', function() {
+    updateInventoryInfo();
+});
+
+// Template filter for split
+function split(str, delimiter) {
+    return str.split(delimiter);
+}
+</script>
+{% endblock %}

@@ -1,0 +1,263 @@
+{% extends 'customer_web/base.html' %}
+{% load static %}
+
+{% block title %}Lịch sử đơn hàng - KiKi{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1 class="h2">Lịch sử đơn hàng</h1>
+                <a href="{% url 'customer_web:product_list' %}" class="btn btn-primary">
+                    <i class="fas fa-shopping-bag"></i> Tiếp tục mua sắm
+                </a>
+            </div>
+            
+            {% if orders %}
+                <div class="row">
+                    {% for order in orders %}
+                    <div class="col-12 mb-4">
+                        <div class="card">
+                            <div class="card-header d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="mb-0">
+                                        Đơn hàng #{{ order.order_id.hex|slice:":8"|upper }}
+                                    </h6>
+                                    <small class="text-muted">{{ order.created_at|date:"d/m/Y H:i" }}</small>
+                                </div>
+                                <div class="text-end">
+                                    <span class="badge 
+                                        {% if order.status == 'pending' %}bg-warning{% endif %}
+                                        {% if order.status == 'confirmed' %}bg-info{% endif %}
+                                        {% if order.status == 'processing' %}bg-info{% endif %}
+                                        {% if order.status == 'shipping' %}bg-primary{% endif %}
+                                        {% if order.status == 'delivered' %}bg-success{% endif %}
+                                        {% if order.status == 'cancelled' %}bg-danger{% endif %}
+                                        {% if order.status == 'return_requested' %}bg-warning{% endif %}
+                                        {% if order.status == 'return_approved' %}bg-info{% endif %}
+                                        {% if order.status == 'returned' %}bg-secondary{% endif %}
+                                        {% if order.status == 'refunded' %}bg-success{% endif %}
+                                    ">
+                                        {% if order.status == 'pending' %}Chờ xử lý{% endif %}
+                                        {% if order.status == 'confirmed' %}Đã xác nhận{% endif %}
+                                        {% if order.status == 'processing' %}Đang xử lý{% endif %}
+                                        {% if order.status == 'shipping' %}Đang giao{% endif %}
+                                        {% if order.status == 'delivered' %}Đã giao{% endif %}
+                                        {% if order.status == 'cancelled' %}Đã hủy{% endif %}
+                                        {% if order.status == 'return_requested' %}Yêu cầu hoàn trả{% endif %}
+                                        {% if order.status == 'return_approved' %}Đã duyệt hoàn trả{% endif %}
+                                        {% if order.status == 'returned' %}Đã hoàn trả{% endif %}
+                                        {% if order.status == 'refunded' %}Đã hoàn tiền{% endif %}
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="card-body">
+                                <div class="row mb-3">
+                                    <div class="col-md-8">
+                                        <h6>Thông tin giao hàng:</h6>
+                                        <p class="mb-1"><strong>{{ order.full_name }}</strong></p>
+                                        <p class="mb-1">{{ order.phone }}</p>
+                                        <p class="mb-0 text-muted">{{ order.address }}</p>
+                                    </div>
+                                    <div class="col-md-4 text-md-end">
+                                        <h6>Tổng tiền:</h6>
+                                        <p class="h5 text-primary mb-0">{{ order.total_amount|floatformat:0 }}₫</p>
+                                    </div>
+                                </div>
+                                
+                                <div class="table-responsive">
+                                    <table class="table table-sm">
+                                        <thead class="table-light">
+                                            <tr>
+                                                <th>Sản phẩm</th>
+                                                <th>Size</th>
+                                                <th>Màu</th>
+                                                <th>SL</th>
+                                                <th>Giá</th>
+                                                <th>Thành tiền</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for item in order.items.all %}
+                                            <tr>
+                                                <td>
+                                                    <div class="d-flex align-items-center">
+                                                        {% if item.product.images.first %}
+                                                        <img src="{{ item.product.images.first.image.url }}" 
+                                                             alt="{{ item.product.name }}" 
+                                                             class="me-2" 
+                                                             style="width: 50px; height: 50px; object-fit: cover;">
+                                                        {% endif %}
+                                                        <div>
+                                                            <div class="fw-medium">{{ item.product.name }}</div>
+                                                            <small class="text-muted">{{ item.product.sku }}</small>
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                                <td>{{ item.size|default:"-" }}</td>
+                                                <td>{{ item.color|default:"-" }}</td>
+                                                <td>{{ item.quantity }}</td>
+                                                <td>{{ item.price|floatformat:0 }}₫</td>
+                                                <td>{{ item.total_price|floatformat:0 }}₫</td>
+                                            </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                                
+                                {% if order.notes %}
+                                <div class="mt-3">
+                                    <h6>Ghi chú:</h6>
+                                    <p class="text-muted">{{ order.notes }}</p>
+                                </div>
+                                {% endif %}
+                                
+                                <div class="mt-3">
+                                    <div class="btn-group" role="group">
+                                        <a href="{% url 'customer_web:order_success' order.order_id %}" 
+                                           class="btn btn-outline-primary btn-sm">
+                                            <i class="fas fa-eye"></i> Xem chi tiết
+                                        </a>
+                                        {% if order.status == 'pending' or order.status == 'confirmed' %}
+                                        <button class="btn btn-outline-danger btn-sm" 
+                                                onclick="cancelOrder('{{ order.order_id }}')">
+                                            <i class="fas fa-times"></i> Hủy đơn
+                                        </button>
+                                        {% endif %}
+                                        {% if order.status == 'delivered' %}
+                                        <button class="btn btn-outline-warning btn-sm">
+                                            <i class="fas fa-redo"></i> Mua lại
+                                        </button>
+                                        <button class="btn btn-outline-info btn-sm" 
+                                                onclick="requestReturn('{{ order.order_id }}')">
+                                            <i class="fas fa-undo"></i> Yêu cầu hoàn trả
+                                        </button>
+                                        {% endif %}
+                                        {% if order.status == 'return_requested' %}
+                                        <span class="badge bg-warning">Đang chờ duyệt hoàn trả</span>
+                                        {% endif %}
+                                        {% if order.status == 'return_approved' %}
+                                        <span class="badge bg-info">Đã duyệt hoàn trả - Vui lòng gửi hàng</span>
+                                        {% endif %}
+                                        {% if order.status == 'returned' %}
+                                        <span class="badge bg-secondary">Đã hoàn trả - Đang xử lý hoàn tiền</span>
+                                        {% endif %}
+                                        {% if order.status == 'refunded' %}
+                                        <span class="badge bg-success">Đã hoàn tiền</span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                
+                <!-- Pagination if needed -->
+                {% if orders.has_other_pages %}
+                <nav aria-label="Order history pagination">
+                    <ul class="pagination justify-content-center">
+                        {% if orders.has_previous %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ orders.previous_page_number }}">
+                                <i class="fas fa-chevron-left"></i>
+                            </a>
+                        </li>
+                        {% endif %}
+                        
+                        {% for num in orders.paginator.page_range %}
+                        {% if orders.number == num %}
+                        <li class="page-item active">
+                            <span class="page-link">{{ num }}</span>
+                        </li>
+                        {% elif num > orders.number|add:'-3' and num < orders.number|add:'3' %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                        </li>
+                        {% endif %}
+                        {% endfor %}
+                        
+                        {% if orders.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ orders.next_page_number }}">
+                                <i class="fas fa-chevron-right"></i>
+                            </a>
+                        </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+                {% endif %}
+                
+            {% else %}
+                <div class="text-center py-5">
+                    <div class="mb-4">
+                        <i class="fas fa-shopping-cart fa-5x text-muted"></i>
+                    </div>
+                    <h3 class="text-muted mb-3">Chưa có đơn hàng nào</h3>
+                    <p class="text-muted mb-4">Bạn chưa thực hiện đơn hàng nào. Hãy khám phá các sản phẩm tuyệt vời của chúng tôi!</p>
+                    <a href="{% url 'customer_web:product_list' %}" class="btn btn-primary">
+                        <i class="fas fa-shopping-bag"></i> Mua sắm ngay
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<script>
+function cancelOrder(orderId) {
+    if (confirm('Bạn có chắc chắn muốn hủy đơn hàng này?')) {
+        // Add AJAX call to cancel order
+        fetch(`/cancel-order/${orderId}/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                'Content-Type': 'application/json',
+            },
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert('Có lỗi xảy ra khi hủy đơn hàng');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Có lỗi xảy ra khi hủy đơn hàng');
+        });
+    }
+}
+
+function requestReturn(orderId) {
+    const reason = prompt('Vui lòng nhập lý do hoàn trả:');
+    if (reason && reason.trim()) {
+        fetch(`/request-return/${orderId}/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                reason: reason.trim()
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('Yêu cầu hoàn trả đã được gửi thành công');
+                location.reload();
+            } else {
+                alert('Có lỗi xảy ra khi gửi yêu cầu hoàn trả');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Có lỗi xảy ra khi gửi yêu cầu hoàn trả');
+        });
+    }
+}
+</script>
+{% endblock %}

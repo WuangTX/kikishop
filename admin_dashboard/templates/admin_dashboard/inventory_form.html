@@ -1,0 +1,236 @@
+{% extends 'admin_dashboard/base.html' %}
+
+{% block title %}{% if form.instance.pk %}Chỉnh sửa{% else %}Thêm{% endif %} tồn kho - KiKi Admin{% endblock %}
+{% block page_title %}{% if form.instance.pk %}Chỉnh sửa{% else %}Thêm{% endif %} tồn kho{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-body">
+                <form method="post" id="inventoryForm">
+                    {% csrf_token %}
+                    
+                    <div class="row">
+                        <div class="col-md-12 mb-3">
+                            <label for="{{ form.product.id_for_label }}" class="form-label">
+                                Sản phẩm <span class="text-danger">*</span>
+                            </label>
+                            {{ form.product }}
+                            {% if form.product.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.product.errors.0 }}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.size.id_for_label }}" class="form-label">
+                                Size <span class="text-danger">*</span>
+                            </label>
+                            {{ form.size }}
+                            {% if form.size.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.size.errors.0 }}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.color.id_for_label }}" class="form-label">
+                                Màu sắc <span class="text-danger">*</span>
+                            </label>
+                            {{ form.color }}
+                            {% if form.color.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.color.errors.0 }}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.quantity.id_for_label }}" class="form-label">
+                                Số lượng tồn kho <span class="text-danger">*</span>
+                            </label>
+                            {{ form.quantity }}
+                            {% if form.quantity.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.quantity.errors.0 }}
+                                </div>
+                            {% endif %}
+                            <div class="form-text">Nhập số lượng sản phẩm hiện có trong kho</div>
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">SKU (Tự động tạo)</label>
+                            <input type="text" class="form-control" readonly id="skuPreview" value="{% if form.instance.pk %}{{ form.instance.sku }}{% endif %}" placeholder="Sẽ được tạo tự động">
+                            <div class="form-text">SKU sẽ được tạo tự động dựa trên sản phẩm, size và màu</div>
+                        </div>
+                    </div>
+                    
+                    {% if form.non_field_errors %}
+                        <div class="alert alert-danger">
+                            {% for error in form.non_field_errors %}
+                                <div>{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                    
+                    <div class="d-flex justify-content-between">
+                        <a href="{% url 'admin_dashboard:inventory_list' %}" class="btn btn-outline-secondary">
+                            <i class="fas fa-arrow-left me-2"></i>Quay lại
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save me-2"></i>
+                            {% if form.instance.pk %}Cập nhật{% else %}Thêm{% endif %} tồn kho
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-4">
+        <!-- SKU Generator Info -->
+        <div class="card">
+            <div class="card-body">
+                <h6 class="card-title">
+                    <i class="fas fa-info-circle text-info me-2"></i>Thông tin SKU
+                </h6>
+                <p class="card-text small">
+                    SKU (Stock Keeping Unit) sẽ được tạo tự động theo công thức:
+                </p>
+                <div class="bg-light p-2 rounded">
+                    <code>[MÃ_SẢN_PHẨM]-[SIZE]-[MÀU]</code>
+                </div>
+                <p class="card-text small mt-2">
+                    Ví dụ: <code>SP001-M-RED</code>
+                </p>
+            </div>
+        </div>
+        
+        <!-- Inventory Status Info -->
+        <div class="card mt-3">
+            <div class="card-body">
+                <h6 class="card-title">
+                    <i class="fas fa-chart-line text-success me-2"></i>Trạng thái tồn kho
+                </h6>
+                <div class="mb-2">
+                    <span class="badge bg-success me-2">Còn hàng</span>
+                    <small>Số lượng > 5</small>
+                </div>
+                <div class="mb-2">
+                    <span class="badge bg-warning me-2">Sắp hết</span>
+                    <small>Số lượng 1-5</small>
+                </div>
+                <div>
+                    <span class="badge bg-danger me-2">Hết hàng</span>
+                    <small>Số lượng = 0</small>
+                </div>
+            </div>
+        </div>
+        
+        {% if form.instance.pk %}
+        <!-- Current Inventory Info -->
+        <div class="card mt-3">
+            <div class="card-body">
+                <h6 class="card-title">
+                    <i class="fas fa-boxes text-primary me-2"></i>Thông tin hiện tại
+                </h6>
+                <table class="table table-sm">
+                    <tr>
+                        <td>Sản phẩm:</td>
+                        <td><strong>{{ form.instance.product.name }}</strong></td>
+                    </tr>
+                    <tr>
+                        <td>Size:</td>
+                        <td><span class="badge bg-secondary">{{ form.instance.size }}</span></td>
+                    </tr>
+                    <tr>
+                        <td>Màu sắc:</td>
+                        <td><span class="badge" style="background-color: {{ form.instance.color }}; color: white;">{{ form.instance.get_color_display }}</span></td>
+                    </tr>
+                    <tr>
+                        <td>SKU:</td>
+                        <td><code>{{ form.instance.sku }}</code></td>
+                    </tr>
+                    <tr>
+                        <td>Trạng thái:</td>
+                        <td>
+                            {% if form.instance.quantity == 0 %}
+                                <span class="badge bg-danger">Hết hàng</span>
+                            {% elif form.instance.is_low_stock %}
+                                <span class="badge bg-warning">Sắp hết</span>
+                            {% else %}
+                                <span class="badge bg-success">Còn hàng</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Cập nhật:</td>
+                        <td>{{ form.instance.updated_at|date:"d/m/Y H:i" }}</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Tự động cập nhật SKU preview khi thay đổi các trường
+    const productField = document.getElementById('{{ form.product.id_for_label }}');
+    const sizeField = document.getElementById('{{ form.size.id_for_label }}');
+    const colorField = document.getElementById('{{ form.color.id_for_label }}');
+    const skuPreview = document.getElementById('skuPreview');
+    
+    function updateSKUPreview() {
+        const productSelect = productField.selectedOptions[0];
+        const sizeValue = sizeField.value;
+        const colorValue = colorField.value;
+        
+        if (productSelect && productSelect.value && sizeValue && colorValue) {
+            // Giả sử product có mã, nếu không có thì dùng ID
+            const productCode = `SP${productSelect.value.padStart(3, '0')}`;
+            const sku = `${productCode}-${sizeValue}-${colorValue}`;
+            skuPreview.value = sku;
+        } else {
+            skuPreview.value = 'Sẽ được tạo tự động';
+        }
+    }
+    
+    // Gắn sự kiện cho các trường
+    if (productField) productField.addEventListener('change', updateSKUPreview);
+    if (sizeField) sizeField.addEventListener('change', updateSKUPreview);
+    if (colorField) colorField.addEventListener('change', updateSKUPreview);
+    
+    // Cập nhật lần đầu
+    updateSKUPreview();
+    
+    // Form validation
+    const form = document.getElementById('inventoryForm');
+    form.addEventListener('submit', function(e) {
+        let isValid = true;
+        
+        // Kiểm tra số lượng không được âm
+        const quantityField = document.getElementById('{{ form.quantity.id_for_label }}');
+        if (quantityField && parseInt(quantityField.value) < 0) {
+            isValid = false;
+            alert('Số lượng tồn kho không thể âm');
+            quantityField.focus();
+        }
+        
+        if (!isValid) {
+            e.preventDefault();
+        }
+    });
+});
+</script>
+{% endblock %}

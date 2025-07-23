@@ -1,0 +1,454 @@
+{% extends 'admin_dashboard/base.html' %}
+
+{% block title %}Quản lý đơn hàng - KiKi Admin{% endblock %}
+{% block page_title %}Quản lý đơn hàng{% endblock %}
+
+{% block content %}
+<!-- Search and filters -->
+<div class="row mb-4">
+    <div class="col-md-8">
+        <form method="get" class="d-flex gap-3">
+            <div class="flex-grow-1">
+                <input type="search" name="q" class="form-control" placeholder="Tìm kiếm theo tên, email, số điện thoại..." value="{{ query }}">
+            </div>
+            <div class="flex-shrink-0">
+                <select name="status" class="form-select">
+                    <option value="">Tất cả trạng thái</option>
+                    {% for status_key, status_label in status_choices %}
+                        <option value="{{ status_key }}" {% if status_key == selected_status %}selected{% endif %}>
+                            {{ status_label }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <button type="submit" class="btn btn-outline-primary">
+                <i class="fas fa-search"></i>
+            </button>
+        </form>
+    </div>
+    <div class="col-md-4 text-end">
+        <div class="btn-group">
+            <button type="button" class="btn btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown">
+                <i class="fas fa-download me-2"></i>Xuất báo cáo
+            </button>
+            <ul class="dropdown-menu">
+                <li><a class="dropdown-item" href="#"><i class="fas fa-file-excel me-2"></i>Excel</a></li>
+                <li><a class="dropdown-item" href="#"><i class="fas fa-file-pdf me-2"></i>PDF</a></li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<!-- Orders table -->
+<div class="table-card">
+    <div class="table-card-header d-flex justify-content-between align-items-center">
+        <h5 class="table-card-title">
+            Danh sách đơn hàng 
+            <span class="badge bg-secondary">{{ page_obj.paginator.count }}</span>
+        </h5>
+        <div class="btn-group btn-group-sm">
+            <button type="button" class="btn btn-outline-primary" onclick="refreshOrders()">
+                <i class="fas fa-sync-alt"></i> Làm mới
+            </button>
+        </div>
+    </div>
+    
+    <div class="table-responsive">
+        <table class="table table-hover mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th style="width: 100px; padding: 15px 12px; font-weight: 600;">Mã đơn</th>
+                    <th style="width: 220px; padding: 15px 12px; font-weight: 600;">Khách hàng</th>
+                    <th style="width: 180px; padding: 15px 12px; font-weight: 600;">Liên hệ</th>
+                    <th style="width: 130px; padding: 15px 12px; font-weight: 600; text-align: right;">Tổng tiền</th>
+                    <th style="width: 120px; padding: 15px 12px; font-weight: 600; text-align: center;">Trạng thái</th>
+                    <th style="width: 130px; padding: 15px 12px; font-weight: 600; text-align: center;">Ngày đặt</th>
+                    <th style="width: 100px; padding: 15px 12px; font-weight: 600; text-align: center;">Thao tác</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for order in page_obj %}
+                <tr style="border-bottom: 1px solid #f1f3f4;">
+                    <td style="padding: 15px 12px; vertical-align: middle;">
+                        <a href="{% url 'admin_dashboard:order_detail' order.id %}" class="text-decoration-none fw-semibold text-primary">
+                            #{{ order.order_id.hex|slice:":8" }}
+                        </a>
+                    </td>
+                    <td style="padding: 15px 12px; vertical-align: middle;">
+                        <div class="fw-semibold" style="margin-bottom: 4px; font-size: 14px;">{{ order.full_name }}</div>
+                        {% if order.user %}
+                            <small class="text-muted" style="font-size: 12px;">
+                                <i class="fas fa-user me-1"></i>{{ order.user.username }}
+                            </small>
+                        {% else %}
+                            <small class="text-muted" style="font-size: 12px;">
+                                <i class="fas fa-user-slash me-1"></i>Khách vãng lai
+                            </small>
+                        {% endif %}
+                    </td>
+                    <td style="padding: 15px 12px; vertical-align: middle;">
+                        <div style="font-size: 13px; line-height: 1.4;">
+                            <div style="margin-bottom: 3px;"><i class="fas fa-envelope me-1 text-muted"></i>{{ order.email|truncatechars:22 }}</div>
+                            <div><i class="fas fa-phone me-1 text-muted"></i>{{ order.phone }}</div>
+                        </div>
+                    </td>
+                    <td style="padding: 15px 12px; vertical-align: middle; text-align: right;">
+                        <div class="fw-bold text-success" style="font-size: 14px; margin-bottom: 2px;">{{ order.total_amount|floatformat:0 }}₫</div>
+                        <small class="text-muted" style="font-size: 11px;">{{ order.items.count }} sản phẩm</small>
+                    </td>
+                    <td style="padding: 15px 12px; vertical-align: middle; text-align: center;">
+                        <span class="badge status-{{ order.status }}" style="padding: 6px 12px; font-size: 11px; font-weight: 500;">
+                            {{ order.get_status_display }}
+                        </span>
+                    </td>
+                    <td style="padding: 15px 12px; vertical-align: middle; text-align: center;">
+                        <div style="font-size: 13px; font-weight: 600; margin-bottom: 2px;">{{ order.created_at|date:"d/m/Y" }}</div>
+                        <small class="text-muted" style="font-size: 11px;">{{ order.created_at|date:"H:i" }}</small>
+                    </td>
+                    <td style="padding: 15px 12px; vertical-align: middle; text-align: center;">
+                        <div class="btn-group" role="group">
+                            <a href="{% url 'admin_dashboard:order_detail' order.id %}" class="btn btn-sm btn-outline-primary" title="Xem chi tiết" style="padding: 6px 10px; border-radius: 6px;">
+                                <i class="fas fa-eye"></i>
+                            </a>
+                            <div class="dropdown">
+                                <button class="btn btn-sm btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown" title="Cập nhật trạng thái" style="padding: 6px 10px; border-radius: 6px;">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <ul class="dropdown-menu dropdown-menu-end">
+                                    {% for status_key, status_label in status_choices %}
+                                        {% if status_key != order.status %}
+                                            <li>
+                                                <a class="dropdown-item" href="#" onclick="updateOrderStatus({{ order.id }}, '{{ status_key }}', '{{ status_label }}')">
+                                                    <span class="badge status-{{ status_key }} me-2">{{ status_label }}</span>
+                                                </a>
+                                            </li>
+                                        {% endif %}
+                                    {% endfor %}
+                                </ul>
+                            </div>
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="7" class="text-center py-5 text-muted">
+                        <i class="fas fa-shopping-cart fa-3x mb-3 d-block"></i>
+                        <h5>Không có đơn hàng nào</h5>
+                        <p>{% if query or selected_status %}Không tìm thấy đơn hàng phù hợp với bộ lọc.{% else %}Chưa có đơn hàng nào được tạo.{% endif %}</p>
+                        {% if query or selected_status %}
+                            <a href="{% url 'admin_dashboard:order_list' %}" class="btn btn-outline-primary">
+                                <i class="fas fa-times me-2"></i>Xóa bộ lọc
+                            </a>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    
+    <!-- Pagination -->
+    {% if page_obj.has_other_pages %}
+    <div class="d-flex justify-content-center py-3">
+        <nav>
+            <ul class="pagination">
+                {% if page_obj.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page=1{% if query %}&q={{ query }}{% endif %}{% if selected_status %}&status={{ selected_status }}{% endif %}">Đầu</a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if query %}&q={{ query }}{% endif %}{% if selected_status %}&status={{ selected_status }}{% endif %}">Trước</a>
+                    </li>
+                {% endif %}
+                
+                <li class="page-item active">
+                    <span class="page-link">{{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</span>
+                </li>
+                
+                {% if page_obj.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if query %}&q={{ query }}{% endif %}{% if selected_status %}&status={{ selected_status }}{% endif %}">Sau</a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if query %}&q={{ query }}{% endif %}{% if selected_status %}&status={{ selected_status }}{% endif %}">Cuối</a>
+                    </li>
+                {% endif %}
+            </ul>
+        </nav>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Order Statistics -->
+<div class="row mt-4">
+    <div class="col-lg-3 col-md-6 mb-3">
+        <div class="stat-card text-center">
+            <div class="stat-card-icon mx-auto" style="background-color: rgba(245, 158, 11, 0.1); color: var(--warning-color);">
+                <i class="fas fa-clock"></i>
+            </div>
+            <div class="stat-card-value text-warning">
+                {{ order_stats.pending|default:0 }}
+            </div>
+            <div class="stat-card-label">Chờ xử lý</div>
+        </div>
+    </div>
+    
+    <div class="col-lg-3 col-md-6 mb-3">
+        <div class="stat-card text-center">
+            <div class="stat-card-icon mx-auto" style="background-color: rgba(59, 130, 246, 0.1); color: #3b82f6;">
+                <i class="fas fa-check-circle"></i>
+            </div>
+            <div class="stat-card-value" style="color: #3b82f6;">{{ order_stats.confirmed|default:0 }}</div>
+            <div class="stat-card-label">Đã xác nhận</div>
+        </div>
+    </div>
+    
+    <div class="col-lg-3 col-md-6 mb-3">
+        <div class="stat-card text-center">
+            <div class="stat-card-icon mx-auto" style="background-color: rgba(139, 92, 246, 0.1); color: var(--secondary-color);">
+                <i class="fas fa-truck"></i>
+            </div>
+            <div class="stat-card-value text-secondary">{{ order_stats.shipping|default:0 }}</div>
+            <div class="stat-card-label">Đang giao</div>
+        </div>
+    </div>
+    
+    <div class="col-lg-3 col-md-6 mb-3">
+        <div class="stat-card text-center">
+            <div class="stat-card-icon mx-auto" style="background-color: rgba(16, 185, 129, 0.1); color: var(--success-color);">
+                <i class="fas fa-check-double"></i>
+            </div>
+            <div class="stat-card-value text-success">{{ order_stats.delivered|default:0 }}</div>
+            <div class="stat-card-label">Đã giao</div>
+        </div>
+    </div>
+    
+    <div class="col-lg-3 col-md-6 mb-3">
+        <div class="stat-card text-center">
+            <div class="stat-card-icon mx-auto" style="background-color: rgba(239, 68, 68, 0.1); color: #ef4444;">
+                <i class="fas fa-times-circle"></i>
+            </div>
+            <div class="stat-card-value" style="color: #ef4444;">{{ order_stats.cancelled|default:0 }}</div>
+            <div class="stat-card-label">Đã hủy</div>
+        </div>
+    </div>
+    
+    <div class="col-lg-3 col-md-6 mb-3">
+        <div class="stat-card text-center">
+            <div class="stat-card-icon mx-auto" style="background-color: rgba(251, 146, 60, 0.1); color: #fb923c;">
+                <i class="fas fa-undo"></i>
+            </div>
+            <div class="stat-card-value" style="color: #fb923c;">{{ order_stats.return_requested|default:0 }}</div>
+            <div class="stat-card-label">Yêu cầu hoàn trả</div>
+        </div>
+    </div>
+    
+    <div class="col-lg-3 col-md-6 mb-3">
+        <div class="stat-card text-center">
+            <div class="stat-card-icon mx-auto" style="background-color: rgba(168, 85, 247, 0.1); color: #a855f7;">
+                <i class="fas fa-check"></i>
+            </div>
+            <div class="stat-card-value" style="color: #a855f7;">{{ order_stats.returned|default:0 }}</div>
+            <div class="stat-card-label">Đã hoàn trả</div>
+        </div>
+    </div>
+    
+    <div class="col-lg-3 col-md-6 mb-3">
+        <div class="stat-card text-center">
+            <div class="stat-card-icon mx-auto" style="background-color: rgba(34, 197, 94, 0.1); color: #22c55e;">
+                <i class="fas fa-money-bill-wave"></i>
+            </div>
+            <div class="stat-card-value" style="color: #22c55e;">{{ order_stats.refunded|default:0 }}</div>
+            <div class="stat-card-label">Đã hoàn tiền</div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<style>
+.table-hover tbody tr:hover {
+    background-color: #f8f9fa !important;
+}
+
+.table thead th {
+    background-color: #f8f9fa !important;
+    border-bottom: 2px solid #dee2e6;
+}
+
+.table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+.btn-group .btn {
+    margin-right: 2px;
+}
+
+.btn-group .btn:last-child {
+    margin-right: 0;
+}
+
+/* Tăng chiều cao cho table card và đảm bảo dropdown không bị khuất */
+.table-card {
+    min-height: 600px;
+    overflow: visible;
+    position: relative;
+}
+
+.table-responsive {
+    overflow: visible !important;
+    min-height: 500px;
+}
+
+/* Status badge styles */
+.badge.status-pending {
+    background-color: #fbbf24 !important;
+    color: #92400e !important;
+}
+
+.badge.status-confirmed {
+    background-color: #3b82f6 !important;
+    color: white !important;
+}
+
+.badge.status-processing {
+    background-color: #8b5cf6 !important;
+    color: white !important;
+}
+
+.badge.status-shipping {
+    background-color: #06b6d4 !important;
+    color: white !important;
+}
+
+.badge.status-delivered {
+    background-color: #10b981 !important;
+    color: white !important;
+}
+
+.badge.status-cancelled {
+    background-color: #ef4444 !important;
+    color: white !important;
+}
+
+.badge.status-return_requested {
+    background-color: #fb923c !important;
+    color: white !important;
+}
+
+.badge.status-return_approved {
+    background-color: #f59e0b !important;
+    color: white !important;
+}
+
+.badge.status-returned {
+    background-color: #a855f7 !important;
+    color: white !important;
+}
+
+.badge.status-refunded {
+    background-color: #22c55e !important;
+    color: white !important;
+}
+
+/* Tăng chiều cao cho table card và đảm bảo dropdown không bị khuất */
+.table-card {
+    min-height: 600px;
+    overflow: visible;
+    position: relative;
+}
+
+.table-responsive {
+    overflow: visible !important;
+    min-height: 500px;
+}
+
+/* Cải thiện dropdown để không bị khuất */
+.dropdown-menu {
+    border-radius: 8px;
+    border: 1px solid #e9ecef;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+    z-index: 1050 !important;
+    min-width: 180px;
+    padding: 8px 0;
+    margin-top: 4px;
+}
+
+.dropdown-menu.dropdown-menu-end {
+    right: 0 !important;
+    left: auto !important;
+}
+
+.dropdown-item {
+    padding: 8px 16px;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    transition: background-color 0.2s ease;
+}
+
+.dropdown-item:hover {
+    background-color: #f8f9fa;
+}
+
+.dropdown-item .badge {
+    font-size: 11px;
+    padding: 4px 8px;
+    min-width: 65px;
+    text-align: center;
+}
+
+/* Đảm bảo dropdown luôn hiển thị trên cùng */
+.dropdown {
+    position: relative;
+}
+
+.dropdown-menu {
+    position: absolute !important;
+}
+
+/* Tăng khoảng cách giữa các hàng để có không gian cho dropdown */
+.table tbody tr {
+    height: 80px;
+}
+
+.table tbody td {
+    vertical-align: middle;
+    padding: 20px 12px !important;
+}
+
+.table thead th {
+    padding: 20px 12px !important;
+}
+</style>
+
+<script>
+function refreshOrders() {
+    location.reload();
+}
+
+function updateOrderStatus(orderId, newStatus, newStatusLabel) {
+    if (confirm(`Bạn có chắc chắn muốn cập nhật trạng thái đơn hàng thành "${newStatusLabel}"?`)) {
+        // Create a form and submit
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = `/dashboard/orders/${orderId}/`;
+        
+        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+        form.innerHTML = `
+            <input type="hidden" name="csrfmiddlewaretoken" value="${csrfToken}">
+            <input type="hidden" name="status" value="${newStatus}">
+        `;
+        
+        document.body.appendChild(form);
+        form.submit();
+    }
+}
+
+// Auto refresh every 30 seconds
+setInterval(function() {
+    // Optional: Auto refresh for real-time updates
+    // location.reload();
+}, 30000);
+</script>
+{% endblock %}

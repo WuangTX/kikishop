@@ -1,0 +1,148 @@
+{% extends 'customer_web/base.html' %}
+{% load static %}
+
+{% block title %}Thông tin cá nhân - KiKi{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row">
+        <div class="col-lg-8 offset-lg-2">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="mb-0">
+                        <i class="fas fa-user"></i> Thông tin cá nhân
+                    </h4>
+                </div>
+                <div class="card-body">
+                    {% if messages %}
+                        {% for message in messages %}
+                        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                        {% endfor %}
+                    {% endif %}
+                    
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <h6 class="border-bottom pb-2 mb-3">Thông tin tài khoản</h6>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="username" class="form-label">Tên đăng nhập</label>
+                                    <input type="text" class="form-control" id="username" 
+                                           value="{{ user.username }}" disabled>
+                                    <small class="text-muted">Tên đăng nhập không thể thay đổi</small>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="email" class="form-label">Email</label>
+                                    <input type="email" class="form-control" id="email" name="email" 
+                                           value="{{ user.email }}" required>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <h6 class="border-bottom pb-2 mb-3">Thông tin cá nhân</h6>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="first_name" class="form-label">Họ</label>
+                                    <input type="text" class="form-control" id="first_name" name="first_name" 
+                                           value="{{ user.first_name }}">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="last_name" class="form-label">Tên</label>
+                                    <input type="text" class="form-control" id="last_name" name="last_name" 
+                                           value="{{ user.last_name }}">
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row mb-4">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="phone" class="form-label">Số điện thoại</label>
+                                    <input type="tel" class="form-control" id="phone" name="phone" 
+                                           value="{{ profile.phone|default:'' }}">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="gender" class="form-label">Giới tính</label>
+                                    <select class="form-select" id="gender" name="gender">
+                                        <option value="">Chọn giới tính</option>
+                                        <option value="M" {% if profile.gender == 'M' %}selected{% endif %}>Nam</option>
+                                        <option value="F" {% if profile.gender == 'F' %}selected{% endif %}>Nữ</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-4">
+                            <label for="address" class="form-label">Địa chỉ</label>
+                            <textarea class="form-control" id="address" name="address" rows="3" 
+                                      placeholder="Nhập địa chỉ đầy đủ của bạn">{{ profile.address|default:'' }}</textarea>
+                        </div>
+                        
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-save"></i> Cập nhật thông tin
+                                </button>
+                                <a href="{% url 'customer_web:home' %}" class="btn btn-outline-secondary ms-2">
+                                    <i class="fas fa-arrow-left"></i> Quay lại
+                                </a>
+                            </div>
+                            <div>
+                                <a href="{% url 'customer_web:order_history' %}" class="btn btn-outline-info">
+                                    <i class="fas fa-history"></i> Lịch sử đơn hàng
+                                </a>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            
+            <!-- Quick Stats -->
+            <div class="row mt-4">
+                <div class="col-md-4">
+                    <div class="card text-center">
+                        <div class="card-body">
+                            <i class="fas fa-shopping-cart fa-2x text-primary mb-2"></i>
+                            <h6>Tổng đơn hàng</h6>
+                            <p class="h4 text-primary">{{ user.order_set.count }}</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card text-center">
+                        <div class="card-body">
+                            <i class="fas fa-check-circle fa-2x text-success mb-2"></i>
+                            <h6>Đã giao</h6>
+                            <p class="h4 text-success">{{ user.order_set.all|length }}</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card text-center">
+                        <div class="card-body">
+                            <i class="fas fa-clock fa-2x text-warning mb-2"></i>
+                            <h6>Đang xử lý</h6>
+                            <p class="h4 text-warning">{{ user.order_set.all|length }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

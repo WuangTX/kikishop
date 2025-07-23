@@ -1,0 +1,225 @@
+{% extends 'admin_dashboard/base.html' %}
+
+{% block title %}
+    {% if action == 'add' %}Thêm danh mục{% else %}Chỉnh sửa danh mục{% endif %} - KiKi Admin
+{% endblock %}
+
+{% block page_title %}
+    {% if action == 'add' %}Thêm danh mục mới{% else %}Chỉnh sửa danh mục{% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="table-card">
+            <div class="table-card-header">
+                <h5 class="table-card-title">
+                    {% if action == 'add' %}
+                        <i class="fas fa-plus me-2"></i>Thêm danh mục mới
+                    {% else %}
+                        <i class="fas fa-edit me-2"></i>Chỉnh sửa danh mục
+                    {% endif %}
+                </h5>
+                <div class="table-card-actions">
+                    <a href="{% url 'admin_dashboard:category_list' %}" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left me-2"></i>Quay lại
+                    </a>
+                </div>
+            </div>
+            
+            <div class="p-4">
+                <form method="post" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    
+                    <div class="row g-3">
+                        <!-- Tên danh mục -->
+                        <div class="col-md-8">
+                            <label for="name" class="form-label">Tên danh mục <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="name" name="name" 
+                                   value="{% if category %}{{ category.name }}{% elif form_data %}{{ form_data.name }}{% endif %}" 
+                                   required>
+                        </div>
+                        
+                        <!-- Trạng thái -->
+                        <div class="col-md-4">
+                            <label class="form-label">Trạng thái</label>
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="is_active" name="is_active" 
+                                       {% if action == 'add' or category.is_active %}checked{% endif %}>
+                                <label class="form-check-label" for="is_active">
+                                    Kích hoạt danh mục
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <!-- Mô tả -->
+                        <div class="col-12">
+                            <label for="description" class="form-label">Mô tả</label>
+                            <textarea class="form-control" id="description" name="description" rows="4" 
+                                      placeholder="Nhập mô tả cho danh mục...">{% if category %}{{ category.description }}{% elif form_data %}{{ form_data.description }}{% endif %}</textarea>
+                        </div>
+                        
+                        <!-- Hình ảnh -->
+                        <div class="col-12">
+                            <label for="image" class="form-label">Hình ảnh danh mục</label>
+                            <input type="file" class="form-control" id="image" name="image" accept="image/*" onchange="previewImage(this)">
+                            <small class="form-text text-muted">Chọn file hình ảnh (JPG, PNG, GIF). Tối đa 5MB.</small>
+                            
+                            <!-- Image Preview -->
+                            <div class="mt-3">
+                                {% if category and category.image %}
+                                <div class="current-image">
+                                    <label class="form-label">Hình ảnh hiện tại:</label>
+                                    <div class="position-relative d-inline-block">
+                                        <img src="{{ category.image.url }}" alt="{{ category.name }}" 
+                                             class="img-thumbnail" style="max-width: 200px; max-height: 200px;">
+                                    </div>
+                                </div>
+                                {% endif %}
+                                
+                                <div id="image-preview" class="mt-2" style="display: none;">
+                                    <label class="form-label">Xem trước:</label>
+                                    <div class="position-relative d-inline-block">
+                                        <img id="preview-img" class="img-thumbnail" style="max-width: 200px; max-height: 200px;">
+                                        <button type="button" class="btn btn-sm btn-danger position-absolute top-0 end-0" 
+                                                onclick="removePreview()" style="transform: translate(50%, -50%);">
+                                            <i class="fas fa-times"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <hr class="my-4">
+                    
+                    <!-- Action Buttons -->
+                    <div class="d-flex justify-content-between">
+                        <a href="{% url 'admin_dashboard:category_list' %}" class="btn btn-secondary">
+                            <i class="fas fa-times me-2"></i>Hủy
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save me-2"></i>
+                            {% if action == 'add' %}Thêm danh mục{% else %}Cập nhật{% endif %}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Preview Category Card -->
+{% if action == 'add' or category %}
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="table-card">
+            <div class="table-card-header">
+                <h6 class="table-card-title">
+                    <i class="fas fa-eye me-2"></i>Xem trước danh mục
+                </h6>
+            </div>
+            <div class="p-4">
+                <div class="row">
+                    <div class="col-md-6 col-lg-4">
+                        <div class="card category-preview" id="category-preview-card">
+                            <div class="card-img-container" style="height: 200px; overflow: hidden;">
+                                {% if category and category.image %}
+                                <img src="{{ category.image.url }}" class="card-img-top" alt="{{ category.name }}" 
+                                     style="height: 100%; object-fit: cover;" id="preview-card-img">
+                                {% else %}
+                                <div class="bg-light d-flex align-items-center justify-content-center h-100" id="preview-card-placeholder">
+                                    <i class="fas fa-image fa-3x text-muted"></i>
+                                </div>
+                                {% endif %}
+                            </div>
+                            <div class="card-body text-center">
+                                <h6 class="card-title" id="preview-card-title">
+                                    {% if category %}{{ category.name }}{% else %}Tên danh mục{% endif %}
+                                </h6>
+                                <p class="card-text text-muted" id="preview-card-description">
+                                    {% if category %}{{ category.description|truncatewords:10 }}{% else %}Mô tả danh mục sẽ hiển thị ở đây...{% endif %}
+                                </p>
+                                <span class="badge" id="preview-card-status">
+                                    {% if action == 'add' or category.is_active %}
+                                    <span class="badge bg-success">Hoạt động</span>
+                                    {% else %}
+                                    <span class="badge bg-secondary">Vô hiệu</span>
+                                    {% endif %}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function previewImage(input) {
+    const file = input.files[0];
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const preview = document.getElementById('image-preview');
+            const previewImg = document.getElementById('preview-img');
+            const cardImg = document.getElementById('preview-card-img');
+            const cardPlaceholder = document.getElementById('preview-card-placeholder');
+            
+            previewImg.src = e.target.result;
+            preview.style.display = 'block';
+            
+            // Update card preview
+            if (cardImg) {
+                cardImg.src = e.target.result;
+            } else if (cardPlaceholder) {
+                cardPlaceholder.innerHTML = `<img src="${e.target.result}" class="w-100 h-100" style="object-fit: cover;">`;
+            }
+        };
+        reader.readAsDataURL(file);
+    }
+}
+
+function removePreview() {
+    const preview = document.getElementById('image-preview');
+    const input = document.getElementById('image');
+    const cardImg = document.getElementById('preview-card-img');
+    const cardPlaceholder = document.getElementById('preview-card-placeholder');
+    
+    preview.style.display = 'none';
+    input.value = '';
+    
+    // Reset card preview
+    if (cardImg && !cardImg.src.includes('/media/')) {
+        cardImg.style.display = 'none';
+        if (cardPlaceholder) {
+            cardPlaceholder.innerHTML = '<i class="fas fa-image fa-3x text-muted"></i>';
+            cardPlaceholder.style.display = 'flex';
+        }
+    }
+}
+
+// Live preview updates
+document.getElementById('name').addEventListener('input', function() {
+    document.getElementById('preview-card-title').textContent = this.value || 'Tên danh mục';
+});
+
+document.getElementById('description').addEventListener('input', function() {
+    const text = this.value || 'Mô tả danh mục sẽ hiển thị ở đây...';
+    document.getElementById('preview-card-description').textContent = text.length > 50 ? text.substring(0, 50) + '...' : text;
+});
+
+document.getElementById('is_active').addEventListener('change', function() {
+    const statusBadge = document.getElementById('preview-card-status');
+    if (this.checked) {
+        statusBadge.innerHTML = '<span class="badge bg-success">Hoạt động</span>';
+    } else {
+        statusBadge.innerHTML = '<span class="badge bg-secondary">Vô hiệu</span>';
+    }
+});
+</script>
+{% endblock %}

@@ -1,0 +1,125 @@
+{% extends 'customer_web/base.html' %}
+{% load static %}
+
+{% block title %}Tin tức - KiKi{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row">
+        <div class="col-12">
+            <h2 class="text-center mb-4">Tin tức thời trang</h2>
+            
+            <!-- Search Form -->
+            <div class="row mb-4">
+                <div class="col-md-6 mx-auto">
+                    <form method="GET" class="d-flex">
+                        <input class="form-control me-2" type="search" name="search" placeholder="Tìm kiếm tin tức..." 
+                               value="{{ request.GET.search }}" aria-label="Search">
+                        <button class="btn btn-outline-success" type="submit">
+                            <i class="fas fa-search"></i>
+                        </button>
+                    </form>
+                </div>
+            </div>
+            
+            {% if news_list %}
+                <div class="row">
+                    {% for news in news_list %}
+                    <div class="col-md-6 col-lg-4 mb-4">
+                        <div class="card h-100 shadow-sm">
+                            {% if news.image %}
+                            <img src="{{ news.image.url }}" class="card-img-top" alt="{{ news.title }}" 
+                                 style="height: 200px; object-fit: cover;">
+                            {% else %}
+                            <div class="card-img-top bg-light d-flex align-items-center justify-content-center" 
+                                 style="height: 200px;">
+                                <i class="fas fa-newspaper fa-3x text-muted"></i>
+                            </div>
+                            {% endif %}
+                            
+                            <div class="card-body d-flex flex-column">
+                                <h5 class="card-title">{{ news.title }}</h5>
+                                <p class="card-text text-muted flex-grow-1">
+                                    {{ news.summary|truncatewords:20|striptags }}
+                                </p>
+                                <div class="mt-auto">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <small class="text-muted">
+                                            <i class="fas fa-calendar"></i> {{ news.created_at|date:"d/m/Y" }}
+                                        </small>
+                                        <small class="text-muted">
+                                            <i class="fas fa-eye"></i> {{ news.views }} lượt xem
+                                        </small>
+                                    </div>
+                                    <a href="{% url 'customer_web:news_detail' news.slug %}" 
+                                       class="btn btn-primary btn-sm mt-2 w-100">
+                                        Đọc thêm <i class="fas fa-arrow-right"></i>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                
+                <!-- Pagination -->
+                {% if is_paginated %}
+                <div class="row">
+                    <div class="col-12">
+                        <nav aria-label="News pagination">
+                            <ul class="pagination justify-content-center">
+                                {% if page_obj.has_previous %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page=1{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}">&laquo; Đầu</a>
+                                    </li>
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}">Trước</a>
+                                    </li>
+                                {% endif %}
+                                
+                                {% for num in page_obj.paginator.page_range %}
+                                    {% if page_obj.number == num %}
+                                        <li class="page-item active">
+                                            <span class="page-link">{{ num }}</span>
+                                        </li>
+                                    {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                                        <li class="page-item">
+                                            <a class="page-link" href="?page={{ num }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}">{{ num }}</a>
+                                        </li>
+                                    {% endif %}
+                                {% endfor %}
+                                
+                                {% if page_obj.has_next %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}">Sau</a>
+                                    </li>
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}">Cuối &raquo;</a>
+                                    </li>
+                                {% endif %}
+                            </ul>
+                        </nav>
+                    </div>
+                </div>
+                {% endif %}
+            {% else %}
+                <div class="text-center py-5">
+                    <i class="fas fa-newspaper fa-4x text-muted mb-3"></i>
+                    <h4 class="text-muted">
+                        {% if request.GET.search %}
+                            Không tìm thấy tin tức nào với từ khóa "{{ request.GET.search }}"
+                        {% else %}
+                            Chưa có tin tức nào
+                        {% endif %}
+                    </h4>
+                    {% if request.GET.search %}
+                        <a href="{% url 'customer_web:news_list' %}" class="btn btn-primary">
+                            <i class="fas fa-arrow-left"></i> Xem tất cả tin tức
+                        </a>
+                    {% endif %}
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

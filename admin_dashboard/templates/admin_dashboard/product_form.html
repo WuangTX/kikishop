@@ -1,0 +1,841 @@
+{% extends 'admin_dashboard/base.html' %}
+
+{% block title %}
+    {% if action == 'add' %}Thêm sản phẩm{% else %}Chỉnh sửa sản phẩm{% endif %} - KiKi Admin
+{% endblock %}
+
+{% block page_title %}
+    {% if action == 'add' %}Thêm sản phẩm mới{% else %}Chỉnh sửa sản phẩm{% endif %}
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.image-card {
+    transition: transform 0.2s ease-in-out;
+}
+
+.image-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+#image-upload-area {
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+#image-upload-area:hover {
+    border-color: var(--bs-primary) !important;
+    background-color: var(--bs-light) !important;
+}
+
+#image-upload-area.border-primary {
+    border-color: var(--bs-primary) !important;
+}
+
+.position-relative .btn {
+    opacity: 0.8;
+}
+
+.position-relative:hover .btn {
+    opacity: 1;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="table-card">
+            <div class="table-card-header">
+                <h5 class="table-card-title">
+                    {% if action == 'add' %}
+                        <i class="fas fa-plus me-2"></i>Thêm sản phẩm mới
+                    {% else %}
+                        <i class="fas fa-edit me-2"></i>Chỉnh sửa sản phẩm
+                    {% endif %}
+                </h5>
+            </div>
+            
+            <div class="p-4">
+                <form method="post" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    
+                    <div class="row g-3">
+                        <!-- Tên sản phẩm -->
+                        <div class="col-md-8">
+                            <label for="name" class="form-label">Tên sản phẩm <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="name" name="name" value="{% if product %}{{ product.name }}{% endif %}" required>
+                        </div>
+                        
+                        <!-- Danh mục -->
+                        <div class="col-md-4">
+                            <label for="category" class="form-label">Danh mục <span class="text-danger">*</span></label>
+                            <select class="form-select" id="category" name="category" required>
+                                <option value="">Chọn danh mục</option>
+                                {% for category in categories %}
+                                    <option value="{{ category.id }}" {% if product and product.category_id == category.id %}selected{% endif %}>
+                                        {{ category.name }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        
+                        <!-- Mô tả -->
+                        <div class="col-12">
+                            <label for="description" class="form-label">Mô tả <span class="text-danger">*</span></label>
+                            <textarea class="form-control" id="description" name="description" rows="4" required>{% if product %}{{ product.description }}{% endif %}</textarea>
+                        </div>
+                        
+                        <!-- Giá -->
+                        <div class="col-md-6">
+                            <label for="price" class="form-label">Giá gốc (₫) <span class="text-danger">*</span></label>
+                            <input type="number" class="form-control" id="price" name="price" value="{% if product %}{{ product.price }}{% endif %}" min="0" required>
+                        </div>
+                        
+                        <!-- Giá khuyến mãi -->
+                        <div class="col-md-6">
+                            <label for="discount_price" class="form-label">Giá khuyến mãi (₫)</label>
+                            <input type="number" class="form-control" id="discount_price" name="discount_price" value="{% if product %}{{ product.discount_price }}{% endif %}" min="0">
+                            <small class="form-text text-muted">Để trống nếu không có khuyến mãi</small>
+                        </div>
+                        
+                        <!-- Tổng tồn kho (chỉ hiển thị) -->
+                        <div class="col-md-6">
+                            <label class="form-label">Tổng tồn kho hiện tại</label>
+                            <div class="form-control bg-light d-flex align-items-center" id="total-stock-display">
+                                <i class="fas fa-boxes me-2 text-primary"></i>
+                                <span id="total-stock-number">
+                                    {% if product %}{{ product.stock }}{% else %}0{% endif %}
+                                </span>
+                                <span class="ms-1">sản phẩm</span>
+                            </div>
+                            <small class="form-text text-muted">Tự động tính từ tổng các size/màu có sẵn</small>
+                        </div>
+                        
+                        <!-- Sizes -->
+                        <div class="col-md-6">
+                            <label for="sizes" class="form-label">Kích thước có sẵn</label>
+                            <input type="text" class="form-control" id="sizes" name="sizes" value="{% if product %}{{ product.sizes }}{% endif %}" placeholder="XS,S,M,L,XL">
+                            <small class="form-text text-muted">Nhập các size cách nhau bởi dấu phẩy (VD: S,M,L,XL)</small>
+                        </div>
+                        
+                        <!-- Colors -->
+                        <div class="col-md-6">
+                            <label for="colors" class="form-label">Màu sắc có sẵn</label>
+                            <input type="text" class="form-control" id="colors" name="colors" value="{% if product %}{{ product.colors }}{% endif %}" placeholder="Đen,Trắng,Xám">
+                            <small class="form-text text-muted">Nhập các màu cách nhau bởi dấu phẩy (VD: Đen,Trắng,Xám)</small>
+                        </div>
+                        
+                        <!-- Featured checkbox -->
+                        <div class="col-md-6">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="is_featured" name="is_featured" {% if product and product.is_featured %}checked{% endif %}>
+                                <label class="form-check-label" for="is_featured">
+                                    <i class="fas fa-star text-warning me-1"></i>Sản phẩm nổi bật
+                                </label>
+                                <small class="form-text text-muted d-block">Sản phẩm nổi bật sẽ hiển thị ở phần "Sản phẩm nổi bật" trang chủ</small>
+                            </div>
+                        </div>
+                        
+                        <!-- Hot Trend checkbox -->
+                        <div class="col-md-6">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="is_hot_trend" name="is_hot_trend" {% if product and product.is_hot_trend %}checked{% endif %}>
+                                <label class="form-check-label" for="is_hot_trend">
+                                    <i class="fas fa-fire text-danger me-1"></i>Sản phẩm Hot Trend
+                                </label>
+                                <small class="form-text text-muted d-block">Sản phẩm hot trend sẽ hiển thị ở phần "🔥 Sản phẩm Hot Trend" trang chủ</small>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Product Images Section -->
+                    <div class="row mt-4">
+                        <div class="col-12">
+                            <hr class="my-4">
+                            <h5 class="text-primary mb-3">
+                                <i class="fas fa-images me-2"></i>Hình ảnh sản phẩm
+                            </h5>
+                            
+                            <!-- Existing Images (if editing) -->
+                            {% if product and product.images.all %}
+                            <div class="mb-4">
+                                <h6 class="mb-3">Ảnh hiện tại:</h6>
+                                <div class="row g-3" id="existing-images">
+                                    {% for image in product.images.all %}
+                                    <div class="col-md-3 col-sm-4 col-6" data-image-id="{{ image.id }}">
+                                        <div class="card image-card">
+                                            <div class="position-relative">
+                                                <img src="{{ image.image.url }}" class="card-img-top" style="height: 200px; object-fit: cover;" alt="{{ image.alt_text }}">
+                                                {% if image.is_primary %}
+                                                <span class="badge bg-primary position-absolute top-0 start-0 m-2">Ảnh chính</span>
+                                                {% endif %}
+                                                <div class="position-absolute top-0 end-0 m-2">
+                                                    <button type="button" class="btn btn-sm btn-danger" onclick="removeExistingImage({{ image.id }})">
+                                                        <i class="fas fa-trash"></i>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                            <div class="card-body p-2">
+                                                <div class="form-check">
+                                                    <input class="form-check-input" type="radio" name="primary_image" value="{{ image.id }}" 
+                                                           {% if image.is_primary %}checked{% endif %} onchange="setPrimaryImage({{ image.id }})">
+                                                    <label class="form-check-label small">Đặt làm ảnh chính</label>
+                                                </div>
+                                                <input type="text" class="form-control form-control-sm mt-2" 
+                                                       name="alt_text_{{ image.id }}" 
+                                                       value="{{ image.alt_text }}" 
+                                                       placeholder="Mô tả ảnh">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            {% endif %}
+                            
+                            <!-- New Images Upload -->
+                            <div class="mb-4">
+                                <h6 class="mb-3">Thêm ảnh mới:</h6>
+                                <div class="border-2 border-dashed border-secondary rounded p-4 text-center" id="image-upload-area">
+                                    <i class="fas fa-cloud-upload-alt fa-3x text-muted mb-3"></i>
+                                    <p class="text-muted mb-3">Kéo thả ảnh vào đây hoặc click để chọn</p>
+                                    <input type="file" class="form-control" id="product-images" name="images" multiple accept="image/*" style="display: none;">
+                                    <button type="button" class="btn btn-outline-primary" id="select-images-btn" onclick="document.getElementById('product-images').click();">
+                                        <i class="fas fa-plus me-2"></i>Chọn ảnh
+                                    </button>
+                                </div>
+                                <small class="form-text text-muted">
+                                    <i class="fas fa-info-circle me-1"></i>
+                                    Hỗ trợ định dạng: JPG, PNG, WEBP. Kích thước tối đa: 5MB mỗi ảnh.
+                                    <br>
+                                    <i class="fas fa-magic me-1 text-success"></i>
+                                    <strong>Tự động tối ưu hóa:</strong> Ảnh sẽ được chuyển đổi sang WebP và nén để giảm dung lượng.
+                                </small>
+                            </div>
+                            
+                            <!-- Preview New Images -->
+                            <div id="new-images-preview" class="row g-3" style="display: none;">
+                                <div class="col-12">
+                                    <h6>Xem trước ảnh mới:</h6>
+                                </div>
+                                <div id="new-images-container"></div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Inventory Management Section -->
+                    <div class="row mt-4" id="inventory-section" style="{% if not product or not product.sizes or not product.colors %}display: none;{% endif %}">
+                        <div class="col-12">
+                            <hr class="my-4">
+                            <h5 class="text-primary mb-3">
+                                <i class="fas fa-boxes me-2"></i>Quản lý tồn kho chi tiết
+                            </h5>
+                            <div class="alert alert-info">
+                                <i class="fas fa-info-circle me-2"></i>
+                                Nhập số lượng tồn kho cho từng combination size-màu. Tổng tồn kho sẽ được cập nhật tự động.
+                            </div>
+                            
+                            <!-- Inventory Table -->
+                            <div class="table-responsive">
+                                <table class="table table-bordered table-hover" id="inventory-table">
+                                    <thead class="table-primary">
+                                        <tr>
+                                            <th width="15%">Size</th>
+                                            <th width="20%">Màu sắc</th>
+                                            <th width="20%">Số lượng</th>
+                                            <th width="25%">SKU</th>
+                                            <th width="20%">Thao tác</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="inventory-tbody">
+                                        <!-- Dynamic inventory rows will be generated here -->
+                                    </tbody>
+                                </table>
+                            </div>
+                            
+                            <div class="d-flex gap-2 mb-3">
+                                <button type="button" class="btn btn-outline-primary btn-sm" onclick="generateInventoryTable()">
+                                    <i class="fas fa-sync me-2"></i>Tạo lại bảng tồn kho
+                                </button>
+                                <button type="button" class="btn btn-outline-success btn-sm" onclick="setAllQuantity()">
+                                    <i class="fas fa-plus me-2"></i>Đặt số lượng hàng loạt
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <hr class="my-4">
+                    
+                    <!-- Action buttons -->
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save me-2"></i>
+                            {% if action == 'add' %}Thêm sản phẩm{% else %}Cập nhật{% endif %}
+                        </button>
+                        <a href="{% url 'admin_dashboard:product_list' %}" class="btn btn-secondary">
+                            <i class="fas fa-times me-2"></i>Hủy bỏ
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Size và Color suggestions -->
+<div class="row mt-4">
+    <div class="col-md-6">
+        <div class="table-card">
+            <div class="table-card-header">
+                <h6 class="table-card-title">Gợi ý Size</h6>
+            </div>
+            <div class="p-3">
+                <div class="d-flex flex-wrap gap-2">
+                    <button type="button" class="btn btn-sm btn-outline-secondary" onclick="addToInput('sizes', 'XS')">XS</button>
+                    <button type="button" class="btn btn-sm btn-outline-secondary" onclick="addToInput('sizes', 'S')">S</button>
+                    <button type="button" class="btn btn-sm btn-outline-secondary" onclick="addToInput('sizes', 'M')">M</button>
+                    <button type="button" class="btn btn-sm btn-outline-secondary" onclick="addToInput('sizes', 'L')">L</button>
+                    <button type="button" class="btn btn-sm btn-outline-secondary" onclick="addToInput('sizes', 'XL')">XL</button>
+                    <button type="button" class="btn btn-sm btn-outline-secondary" onclick="addToInput('sizes', 'XXL')">XXL</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="table-card">
+            <div class="table-card-header">
+                <h6 class="table-card-title">Gợi ý Màu sắc</h6>
+            </div>
+            <div class="p-3">
+                <div class="d-flex flex-wrap gap-2">
+                    <button type="button" class="btn btn-sm btn-outline-secondary" onclick="addToInput('colors', 'Đen')">Đen</button>
+                    <button type="button" class="btn btn-sm btn-outline-secondary" onclick="addToInput('colors', 'Trắng')">Trắng</button>
+                    <button type="button" class="btn btn-sm btn-outline-secondary" onclick="addToInput('colors', 'Xám')">Xám</button>
+                    <button type="button" class="btn btn-sm btn-outline-secondary" onclick="addToInput('colors', 'Be')">Be</button>
+                    <button type="button" class="btn btn-sm btn-outline-secondary" onclick="addToInput('colors', 'Hồng')">Hồng</button>
+                    <button type="button" class="btn btn-sm btn-outline-secondary" onclick="addToInput('colors', 'Xanh')">Xanh</button>
+                    <button type="button" class="btn btn-sm btn-outline-secondary" onclick="addToInput('colors', 'Navy')">Navy</button>
+                    <button type="button" class="btn btn-sm btn-outline-secondary" onclick="addToInput('colors', 'Nâu')">Nâu</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Existing inventory data for edit mode
+let existingInventory = {};
+{% if product and product.inventory.all %}
+    {% for item in product.inventory.all %}
+    existingInventory['{{ item.size }}-{{ item.color }}'] = {
+        quantity: {{ item.quantity }},
+        sku: '{{ item.sku }}'
+    };
+    {% endfor %}
+{% endif %}
+
+function addToInput(inputName, value) {
+    const input = document.getElementById(inputName);
+    const currentValue = input.value.trim();
+    
+    if (currentValue === '') {
+        input.value = value;
+    } else {
+        const values = currentValue.split(',').map(v => v.trim());
+        if (!values.includes(value)) {
+            input.value = values.concat([value]).join(',');
+        }
+    }
+    
+    // Auto-generate inventory table when sizes/colors change
+    setTimeout(generateInventoryTable, 100);
+}
+
+function generateInventoryTable() {
+    const sizesInput = document.getElementById('sizes').value.trim();
+    const colorsInput = document.getElementById('colors').value.trim();
+    const inventorySection = document.getElementById('inventory-section');
+    const tbody = document.getElementById('inventory-tbody');
+    
+    // Show/hide inventory section
+    if (sizesInput && colorsInput) {
+        inventorySection.style.display = 'block';
+        
+        // Parse sizes and colors
+        const sizes = sizesInput.split(',').map(s => s.trim()).filter(s => s);
+        const colors = colorsInput.split(',').map(c => c.trim()).filter(c => c);
+        
+        // Clear existing rows
+        tbody.innerHTML = '';
+        
+        // Generate rows for each size-color combination
+        sizes.forEach(size => {
+            colors.forEach(color => {
+                const key = `${size}-${color}`;
+                const existing = existingInventory[key] || { quantity: 0, sku: '' };
+                
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td class="fw-bold align-middle">${size}</td>
+                    <td class="align-middle">
+                        <span class="badge bg-secondary">${color}</span>
+                    </td>
+                    <td class="align-middle">
+                        <input type="number" 
+                               class="form-control inventory-quantity" 
+                               name="inventory[${size}][${color}][quantity]" 
+                               value="${existing.quantity}" 
+                               min="0" 
+                               style="width: 100px;" 
+                               onchange="updateTotalStock()"
+                               placeholder="0">
+                    </td>
+                    <td class="align-middle">
+                        <input type="text" 
+                               class="form-control" 
+                               name="inventory[${size}][${color}][sku]" 
+                               value="${existing.sku}" 
+                               placeholder="Auto-generate" 
+                               style="width: 200px;">
+                    </td>
+                    <td class="align-middle">
+                        <button type="button" class="btn btn-sm btn-outline-danger" onclick="clearRow(this)">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        });
+        
+        updateTotalStock();
+    } else {
+        inventorySection.style.display = 'none';
+    }
+}
+
+function updateTotalStock() {
+    const quantityInputs = document.querySelectorAll('.inventory-quantity');
+    let total = 0;
+    
+    quantityInputs.forEach(input => {
+        const value = parseInt(input.value) || 0;
+        total += value;
+    });
+    
+    document.getElementById('total-stock-number').textContent = total;
+}
+
+function clearRow(button) {
+    const row = button.closest('tr');
+    const quantityInput = row.querySelector('.inventory-quantity');
+    quantityInput.value = 0;
+    updateTotalStock();
+}
+
+function setAllQuantity() {
+    const quantity = prompt('Nhập số lượng muốn đặt cho tất cả combinations:', '10');
+    if (quantity !== null && !isNaN(quantity) && quantity >= 0) {
+        const quantityInputs = document.querySelectorAll('.inventory-quantity');
+        quantityInputs.forEach(input => {
+            input.value = quantity;
+        });
+        updateTotalStock();
+    }
+}
+
+// Initialize on page load
+document.addEventListener('DOMContentLoaded', function() {
+    // Generate inventory table if editing existing product
+    {% if product %}
+    generateInventoryTable();
+    {% endif %}
+});
+
+// Add onchange events to sizes and colors inputs
+document.getElementById('sizes').addEventListener('input', function() {
+    setTimeout(generateInventoryTable, 100);
+});
+document.getElementById('colors').addEventListener('input', function() {
+    setTimeout(generateInventoryTable, 100);
+});
+
+// Image upload functionality
+let imagesToDelete = [];
+let newImageFiles = [];
+
+function handleImageFiles(files) {
+    const previewContainer = document.getElementById('new-images-container');
+    const previewSection = document.getElementById('new-images-preview');
+    
+    files.forEach(file => {
+        if (!file.type.startsWith('image/')) {
+            alert('Chỉ chấp nhận file ảnh!');
+            return;
+        }
+        
+        if (file.size > 5 * 1024 * 1024) {
+            alert(`File ${file.name} quá lớn! Kích thước tối đa 5MB.`);
+            return;
+        }
+        
+        // Check if file is already WebP
+        if (file.type === 'image/webp') {
+            // File is already WebP, use as-is
+            newImageFiles.push(file);
+            
+            // Create preview directly
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const col = document.createElement('div');
+                col.className = 'col-md-3 col-sm-4 col-6';
+                col.innerHTML = `
+                    <div class="card image-card">
+                        <div class="position-relative">
+                            <img src="${e.target.result}" class="card-img-top" style="height: 200px; object-fit: cover;" alt="New image">
+                            <div class="position-absolute top-0 start-0 m-2">
+                                <span class="badge bg-info small">WebP ✓</span>
+                            </div>
+                            <div class="position-absolute top-0 end-0 m-2">
+                                <button type="button" class="btn btn-sm btn-danger" onclick="removeNewImage(this, '${file.name}')">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="card-body p-2">
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="new_primary_image" value="${file.name}">
+                                <label class="form-check-label small">Đặt làm ảnh chính</label>
+                            </div>
+                            <input type="text" class="form-control form-control-sm mt-2" 
+                                   name="new_alt_text_${file.name.replace(/[^a-zA-Z0-9]/g, '_')}" 
+                                   placeholder="Mô tả ảnh">
+                            <small class="text-muted mt-1 d-block">
+                                <i class="fas fa-check-circle me-1 text-success"></i>
+                                Đã tối ưu - ${formatFileSize(file.size)}
+                            </small>
+                        </div>
+                    </div>
+                `;
+                previewContainer.appendChild(col);
+                previewSection.style.display = 'block';
+            };
+            reader.readAsDataURL(file);
+            return;
+        }
+        
+        // Show loading placeholder for non-WebP files
+        const loadingCol = document.createElement('div');
+        loadingCol.className = 'col-md-3 col-sm-4 col-6';
+        loadingCol.id = `loading-${file.name.replace(/[^a-zA-Z0-9]/g, '_')}`;
+        loadingCol.innerHTML = `
+            <div class="card image-card">
+                <div class="card-body text-center p-4">
+                    <div class="spinner-border text-primary mb-2" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <p class="small mb-0">Đang tối ưu hóa ảnh...</p>
+                    <p class="small text-muted">${file.name}</p>
+                </div>
+            </div>
+        `;
+        previewContainer.appendChild(loadingCol);
+        previewSection.style.display = 'block';
+        
+        // Compress and convert to WebP for non-WebP files
+        compressAndConvertToWebP(file, (compressedFile, originalSize, compressedSize) => {
+            // Remove loading placeholder
+            const loadingElement = document.getElementById(`loading-${file.name.replace(/[^a-zA-Z0-9]/g, '_')}`);
+            if (loadingElement) {
+                loadingElement.remove();
+            }
+            
+            newImageFiles.push(compressedFile);
+            
+            // Create preview
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const compressionRatio = ((originalSize - compressedSize) / originalSize * 100).toFixed(1);
+                const col = document.createElement('div');
+                col.className = 'col-md-3 col-sm-4 col-6';
+                col.innerHTML = `
+                    <div class="card image-card">
+                        <div class="position-relative">
+                            <img src="${e.target.result}" class="card-img-top" style="height: 200px; object-fit: cover;" alt="New image">
+                            <div class="position-absolute top-0 start-0 m-2">
+                                <span class="badge bg-success small">WebP -${compressionRatio}%</span>
+                            </div>
+                            <div class="position-absolute top-0 end-0 m-2">
+                                <button type="button" class="btn btn-sm btn-danger" onclick="removeNewImage(this, '${compressedFile.name}')">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="card-body p-2">
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="new_primary_image" value="${compressedFile.name}">
+                                <label class="form-check-label small">Đặt làm ảnh chính</label>
+                            </div>
+                            <input type="text" class="form-control form-control-sm mt-2" 
+                                   name="new_alt_text_${compressedFile.name.replace(/[^a-zA-Z0-9]/g, '_')}" 
+                                   placeholder="Mô tả ảnh">
+                            <small class="text-muted mt-1 d-block">
+                                <i class="fas fa-compress-arrows-alt me-1"></i>
+                                ${formatFileSize(originalSize)} → ${formatFileSize(compressedSize)}
+                            </small>
+                        </div>
+                    </div>
+                `;
+                previewContainer.appendChild(col);
+            };
+            reader.readAsDataURL(compressedFile);
+        });
+    });
+}
+
+// Function to compress and convert image to WebP
+function compressAndConvertToWebP(file, callback) {
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    const img = new Image();
+    
+    img.onload = function() {
+        // Calculate new dimensions to maintain aspect ratio
+        const maxWidth = 1200;
+        const maxHeight = 1200;
+        let { width, height } = img;
+        
+        // Only resize if image is larger than max dimensions
+        if (width > maxWidth || height > maxHeight) {
+            const ratio = Math.min(maxWidth / width, maxHeight / height);
+            width = Math.floor(width * ratio);
+            height = Math.floor(height * ratio);
+        }
+        
+        // Set canvas dimensions
+        canvas.width = width;
+        canvas.height = height;
+        
+        // Enable image smoothing for better quality
+        ctx.imageSmoothingEnabled = true;
+        ctx.imageSmoothingQuality = 'high';
+        
+        // Draw and compress image
+        ctx.drawImage(img, 0, 0, width, height);
+        
+        // Convert to WebP with quality compression
+        canvas.toBlob(function(blob) {
+            if (!blob) {
+                alert('Không thể chuyển đổi ảnh này!');
+                return;
+            }
+            
+            // Create new file with WebP extension
+            const originalName = file.name.replace(/\.[^/.]+$/, '');
+            const timestamp = Date.now();
+            const webpFile = new File([blob], `${originalName}_${timestamp}.webp`, {
+                type: 'image/webp',
+                lastModified: timestamp
+            });
+            
+            callback(webpFile, file.size, blob.size);
+        }, 'image/webp', 0.85); // 85% quality for good balance between quality and size
+    };
+    
+    img.onerror = function() {
+        alert('Không thể xử lý ảnh này! Vui lòng thử ảnh khác.');
+        // Remove loading placeholder if error occurs
+        const loadingElement = document.getElementById(`loading-${file.name.replace(/[^a-zA-Z0-9]/g, '_')}`);
+        if (loadingElement) {
+            loadingElement.remove();
+        }
+    };
+    
+    // Load the image
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        img.src = e.target.result;
+    };
+    reader.onerror = function() {
+        alert('Không thể đọc file ảnh!');
+        // Remove loading placeholder if error occurs
+        const loadingElement = document.getElementById(`loading-${file.name.replace(/[^a-zA-Z0-9]/g, '_')}`);
+        if (loadingElement) {
+            loadingElement.remove();
+        }
+    };
+    reader.readAsDataURL(file);
+}
+
+// Helper function to format file size
+function formatFileSize(bytes) {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+}
+
+function removeExistingImage(imageId) {
+    if (confirm('Bạn có chắc chắn muốn xóa ảnh này?')) {
+        const imageCard = document.querySelector(`[data-image-id="${imageId}"]`);
+        if (imageCard) {
+            imageCard.style.display = 'none';
+            imagesToDelete.push(imageId);
+            
+            // Add hidden input to track deleted images
+            const hiddenInput = document.createElement('input');
+            hiddenInput.type = 'hidden';
+            hiddenInput.name = 'images_to_delete';
+            hiddenInput.value = imageId;
+            document.querySelector('form').appendChild(hiddenInput);
+        }
+    }
+}
+
+function removeNewImage(button, fileName) {
+    const col = button.closest('.col-md-3');
+    col.remove();
+    
+    // Remove from newImageFiles array
+    newImageFiles = newImageFiles.filter(file => file.name !== fileName);
+    
+    // Hide preview section if no images left
+    const previewContainer = document.getElementById('new-images-container');
+    const previewSection = document.getElementById('new-images-preview');
+    if (previewContainer.children.length === 0) {
+        previewSection.style.display = 'none';
+    }
+}
+
+function setPrimaryImage(imageId) {
+    // Update UI to show which image is primary
+    document.querySelectorAll('.badge.bg-primary').forEach(badge => {
+        if (badge.textContent === 'Ảnh chính') {
+            badge.remove();
+        }
+    });
+    
+    const imageCard = document.querySelector(`[data-image-id="${imageId}"]`);
+    if (imageCard) {
+        const img = imageCard.querySelector('img');
+        const badge = document.createElement('span');
+        badge.className = 'badge bg-primary position-absolute top-0 start-0 m-2';
+        badge.textContent = 'Ảnh chính';
+        img.parentElement.appendChild(badge);
+    }
+}
+
+// Initialize image upload on page load
+document.addEventListener('DOMContentLoaded', function() {
+    // Generate inventory table if editing existing product
+    {% if product %}
+    generateInventoryTable();
+    {% endif %}
+    
+    // Setup image upload functionality - simple approach
+    console.log('Setting up image upload...');
+    
+    // Verify elements exist
+    const imageInput = document.getElementById('product-images');
+    const selectButton = document.getElementById('select-images-btn');
+    const uploadArea = document.getElementById('image-upload-area');
+    
+    if (!imageInput) {
+        console.error('Image input element not found!');
+        return;
+    }
+    
+    if (!selectButton) {
+        console.error('Select button element not found!');
+        return;
+    }
+    
+    console.log('Elements found, setting up simplified upload...');
+    
+    // Simple direct handlers without complex logic
+    selectButton.onclick = function(e) {
+        e.stopPropagation();
+        console.log('Direct button click handler - opening file dialog');
+        imageInput.click();
+    };
+    
+    // Upload area click (excluding button)
+    uploadArea.onclick = function(e) {
+        if (e.target !== selectButton && !selectButton.contains(e.target)) {
+            console.log('Upload area clicked - opening file dialog');
+            imageInput.click();
+        }
+    };
+    
+    // File input change handler
+    imageInput.onchange = function(e) {
+        console.log('File input changed, files:', e.target.files);
+        const files = Array.from(e.target.files);
+        if (files.length > 0) {
+            handleImageFiles(files);
+        }
+        // Clear the input so same file can be selected again if needed
+        e.target.value = '';
+    };
+    
+    // Drag and drop
+    uploadArea.ondragover = function(e) {
+        e.preventDefault();
+        uploadArea.classList.add('border-primary', 'bg-light');
+    };
+    
+    uploadArea.ondragleave = function(e) {
+        e.preventDefault();
+        uploadArea.classList.remove('border-primary', 'bg-light');
+    };
+    
+    uploadArea.ondrop = function(e) {
+        e.preventDefault();
+        uploadArea.classList.remove('border-primary', 'bg-light');
+        const files = Array.from(e.dataTransfer.files);
+        handleImageFiles(files);
+    };
+});
+
+// Form submission handler to include new images
+document.addEventListener('submit', function(e) {
+    if (e.target.tagName === 'FORM') {
+        const form = e.target;
+        const formData = new FormData(form);
+        
+        // Add new image files to form data
+        console.log('Adding', newImageFiles.length, 'new images to form');
+        newImageFiles.forEach((file, index) => {
+            console.log(`Adding file ${index}:`, file.name);
+            formData.append('new_images', file);
+        });
+        
+        // If using standard form submission, we need to recreate form with files
+        if (newImageFiles.length > 0) {
+            // Create hidden file inputs for each new image
+            newImageFiles.forEach((file, index) => {
+                const fileInput = document.createElement('input');
+                fileInput.type = 'file';
+                fileInput.name = 'new_images';
+                fileInput.style.display = 'none';
+                
+                // Create a FileList-like object
+                const dt = new DataTransfer();
+                dt.items.add(file);
+                fileInput.files = dt.files;
+                
+                form.appendChild(fileInput);
+            });
+        }
+        
+        console.log('Form will submit with all data');
+    }
+});
+</script>
+{% endblock %}

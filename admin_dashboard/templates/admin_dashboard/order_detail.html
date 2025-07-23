@@ -1,0 +1,405 @@
+{% extends 'admin_dashboard/base.html' %}
+
+{% block title %}Chi tiết đơn hàng #{{ order.order_id.hex|slice:":8" }} - KiKi Admin{% endblock %}
+{% block page_title %}Chi tiết đơn hàng #{{ order.order_id.hex|slice:":8" }}{% endblock %}
+
+{% block content %}
+<!-- Order Header -->
+<div class="row mb-4">
+    <div class="col-md-8">
+        <div class="d-flex align-items-center gap-3">
+            <a href="{% url 'admin_dashboard:order_list' %}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left me-2"></i>Quay lại
+            </a>
+            <div>
+                <h4 class="mb-1">Đơn hàng #{{ order.order_id.hex|slice:":8" }}</h4>
+                <small class="text-muted">Tạo lúc {{ order.created_at|date:"d/m/Y H:i" }}</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4 text-end">
+        <span class="badge status-{{ order.status }} fs-6 px-3 py-2">
+            {{ order.get_status_display }}
+        </span>
+    </div>
+</div>
+
+<div class="row g-4">
+    <!-- Order Info -->
+    <div class="col-lg-8">
+        <!-- Customer Info -->
+        <div class="table-card mb-4">
+            <div class="table-card-header">
+                <h5 class="table-card-title">
+                    <i class="fas fa-user me-2"></i>Thông tin khách hàng
+                </h5>
+            </div>
+            <div class="p-4">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label class="form-label text-muted">Họ tên</label>
+                            <div class="fw-semibold">{{ order.full_name }}</div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label text-muted">Email</label>
+                            <div>{{ order.email }}</div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label text-muted">Số điện thoại</label>
+                            <div>{{ order.phone }}</div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label class="form-label text-muted">Tài khoản</label>
+                            <div>
+                                {% if order.user %}
+                                    <i class="fas fa-user text-success me-2"></i>{{ order.user.username }}
+                                    <small class="text-muted">(Thành viên)</small>
+                                {% else %}
+                                    <i class="fas fa-user-slash text-muted me-2"></i>Khách vãng lai
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label text-muted">Địa chỉ giao hàng</label>
+                            <div>{{ order.address }}</div>
+                        </div>
+                        {% if order.notes %}
+                        <div class="mb-3">
+                            <label class="form-label text-muted">Ghi chú</label>
+                            <div class="fst-italic">{{ order.notes }}</div>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Return Information (if applicable) -->
+        {% if order.status in 'return_requested,return_approved,returned,refunded' %}
+        <div class="table-card mb-4">
+            <div class="table-card-header">
+                <h5 class="table-card-title">
+                    <i class="fas fa-undo me-2"></i>Thông tin hoàn trả
+                </h5>
+            </div>
+            <div class="p-4">
+                <form method="post">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="update_return_info">
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Lý do hoàn trả</label>
+                                <textarea name="return_reason" class="form-control" rows="3" placeholder="Nhập lý do hoàn trả...">{{ order.return_reason }}</textarea>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Số tiền hoàn</label>
+                                <div class="input-group">
+                                    <input type="number" name="refund_amount" class="form-control" value="{{ order.refund_amount|default:order.total_amount }}" min="0" max="{{ order.total_amount }}">
+                                    <span class="input-group-text">₫</span>
+                                </div>
+                                <small class="text-muted">Tối đa {{ order.total_amount }}₫</small>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-3">
+                            <div class="mb-3">
+                                <label class="form-label text-muted">Ngày yêu cầu</label>
+                                <div>{{ order.return_requested_at|date:"d/m/Y H:i"|default:"Chưa có" }}</div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="mb-3">
+                                <label class="form-label text-muted">Ngày duyệt</label>
+                                <div>{{ order.return_approved_at|date:"d/m/Y H:i"|default:"Chưa có" }}</div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="mb-3">
+                                <label class="form-label text-muted">Ngày hoàn trả</label>
+                                <div>{{ order.return_completed_at|date:"d/m/Y H:i"|default:"Chưa có" }}</div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="mb-3">
+                                <label class="form-label text-muted">Ngày hoàn tiền</label>
+                                <div>{{ order.refund_completed_at|date:"d/m/Y H:i"|default:"Chưa có" }}</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save me-2"></i>Cập nhật thông tin hoàn trả
+                    </button>
+                </form>
+            </div>
+        </div>
+        {% endif %}
+        
+        <!-- Order Items -->
+        <div class="table-card">
+            <div class="table-card-header">
+                <h5 class="table-card-title">
+                    <i class="fas fa-box me-2"></i>Sản phẩm đã đặt
+                </h5>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Sản phẩm</th>
+                            <th width="80">Size</th>
+                            <th width="80">Màu</th>
+                            <th width="100">Đơn giá</th>
+                            <th width="80">Số lượng</th>
+                            <th width="120">Thành tiền</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in order_items %}
+                        <tr>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <div class="flex-shrink-0">
+                                        {% if item.product.images.exists %}
+                                            <img src="{{ item.product.images.first.image.url }}" class="rounded" width="50" height="50" style="object-fit: cover;">
+                                        {% else %}
+                                            <div class="bg-light rounded d-flex align-items-center justify-content-center" style="width: 50px; height: 50px;">
+                                                <i class="fas fa-image text-muted"></i>
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                    <div class="flex-grow-1 ms-3">
+                                        <div class="fw-semibold">{{ item.product.name }}</div>
+                                        <small class="text-muted">{{ item.product.category.name }}</small>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                {% if item.size %}
+                                    <span class="badge bg-light text-dark">{{ item.size }}</span>
+                                {% else %}
+                                    <span class="text-muted">-</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if item.color %}
+                                    <span class="badge bg-light text-dark">{{ item.color }}</span>
+                                {% else %}
+                                    <span class="text-muted">-</span>
+                                {% endif %}
+                            </td>
+                            <td class="fw-semibold">{{ item.price|floatformat:0 }}₫</td>
+                            <td class="text-center">
+                                <span class="badge bg-primary">{{ item.quantity }}</span>
+                            </td>
+                            <td class="fw-semibold text-success">{{ item.total_price|floatformat:0 }}₫</td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="6" class="text-center py-4 text-muted">
+                                Không có sản phẩm nào trong đơn hàng
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                    <tfoot class="table-light">
+                        <tr>
+                            <td colspan="5" class="fw-semibold text-end">Tổng cộng:</td>
+                            <td class="fw-bold text-success fs-5">{{ order.total_amount|floatformat:0 }}₫</td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Order Actions -->
+    <div class="col-lg-4">
+        <!-- Status Update -->
+        <div class="table-card mb-4">
+            <div class="table-card-header">
+                <h5 class="table-card-title">
+                    <i class="fas fa-edit me-2"></i>Cập nhật trạng thái
+                </h5>
+            </div>
+            <div class="p-4">
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label for="status" class="form-label">Trạng thái hiện tại</label>
+                        <select class="form-select" id="status" name="status">
+                            {% for status_key, status_label in status_choices %}
+                                <option value="{{ status_key }}" {% if status_key == order.status %}selected{% endif %}>
+                                    {{ status_label }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="fas fa-save me-2"></i>Cập nhật trạng thái
+                    </button>
+                </form>
+            </div>
+        </div>
+        
+        <!-- Order Summary -->
+        <div class="table-card mb-4">
+            <div class="table-card-header">
+                <h5 class="table-card-title">
+                    <i class="fas fa-receipt me-2"></i>Tóm tắt đơn hàng
+                </h5>
+            </div>
+            <div class="p-4">
+                <div class="d-flex justify-content-between mb-2">
+                    <span>Số sản phẩm:</span>
+                    <span class="fw-semibold">{{ order_items|length }}</span>
+                </div>
+                <div class="d-flex justify-content-between mb-2">
+                    <span>Tổng số lượng:</span>
+                    <span class="fw-semibold">
+                        {% for item in order_items %}{{ item.quantity }}{% if not forloop.last %} + {% endif %}{% endfor %}
+                        = {{ order_items|length|add:order_items.0.quantity|default:0 }}
+                    </span>
+                </div>
+                <hr>
+                <div class="d-flex justify-content-between">
+                    <span class="fw-semibold">Tổng tiền:</span>
+                    <span class="fw-bold text-success fs-5">{{ order.total_amount|floatformat:0 }}₫</span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Order Timeline -->
+        <div class="table-card">
+            <div class="table-card-header">
+                <h5 class="table-card-title">
+                    <i class="fas fa-history me-2"></i>Lịch sử đơn hàng
+                </h5>
+            </div>
+            <div class="p-4">
+                <div class="timeline">
+                    <div class="timeline-item active">
+                        <div class="timeline-marker bg-success"></div>
+                        <div class="timeline-content">
+                            <h6 class="mb-1">Đặt hàng</h6>
+                            <small class="text-muted">{{ order.created_at|date:"d/m/Y H:i" }}</small>
+                        </div>
+                    </div>
+                    {% if order.status != 'pending' %}
+                    <div class="timeline-item active">
+                        <div class="timeline-marker bg-primary"></div>
+                        <div class="timeline-content">
+                            <h6 class="mb-1">{{ order.get_status_display }}</h6>
+                            <small class="text-muted">{{ order.updated_at|date:"d/m/Y H:i" }}</small>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+/* Status badge styles */
+.badge.status-pending {
+    background-color: #fbbf24 !important;
+    color: #92400e !important;
+}
+
+.badge.status-confirmed {
+    background-color: #3b82f6 !important;
+    color: white !important;
+}
+
+.badge.status-processing {
+    background-color: #8b5cf6 !important;
+    color: white !important;
+}
+
+.badge.status-shipping {
+    background-color: #06b6d4 !important;
+    color: white !important;
+}
+
+.badge.status-delivered {
+    background-color: #10b981 !important;
+    color: white !important;
+}
+
+.badge.status-cancelled {
+    background-color: #ef4444 !important;
+    color: white !important;
+}
+
+.badge.status-return_requested {
+    background-color: #fb923c !important;
+    color: white !important;
+}
+
+.badge.status-return_approved {
+    background-color: #f59e0b !important;
+    color: white !important;
+}
+
+.badge.status-returned {
+    background-color: #a855f7 !important;
+    color: white !important;
+}
+
+.badge.status-refunded {
+    background-color: #22c55e !important;
+    color: white !important;
+}
+
+.timeline {
+    position: relative;
+    padding-left: 30px;
+}
+
+.timeline::before {
+    content: '';
+    position: absolute;
+    left: 12px;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background-color: #e5e7eb;
+}
+
+.timeline-item {
+    position: relative;
+    margin-bottom: 20px;
+}
+
+.timeline-marker {
+    position: absolute;
+    left: -18px;
+    top: 2px;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    border: 2px solid white;
+}
+
+.timeline-content h6 {
+    margin-bottom: 4px;
+    font-size: 0.9rem;
+}
+
+.timeline-item:last-child {
+    margin-bottom: 0;
+}
+</style>
+{% endblock %}

@@ -1,0 +1,315 @@
+{% extends 'admin_dashboard/base.html' %}
+
+{% block title %}Quản lý tồn kho - KiKi Admin{% endblock %}
+{% block page_title %}Quản lý tồn kho{% endblock %}
+
+{% block content %}
+{% csrf_token %}
+<!-- Search and filters -->
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="get">
+            <!-- Search bar and action buttons -->
+            <div class="row mb-3">
+                <div class="col-lg-8">
+                    <div class="input-group">
+                        <input type="search" name="q" class="form-control" placeholder="Tìm kiếm theo tên sản phẩm, SKU..." value="{{ query }}">
+                        <button type="submit" class="btn btn-outline-primary">
+                            <i class="fas fa-search"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="col-lg-4 text-end">
+                    <div class="btn-group">
+                        <a href="{% url 'admin_dashboard:inventory_add' %}" class="btn btn-primary">
+                            <i class="fas fa-plus me-2"></i>Thêm tồn kho
+                        </a>
+                        <a href="{% url 'admin_dashboard:bulk_inventory' %}" class="btn btn-success">
+                            <i class="fas fa-layer-group me-2"></i>Cập nhật hàng loạt
+                        </a>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Filters -->
+            <div class="row">
+                <div class="col-md-3 mb-2">
+                    <label class="form-label small">Sản phẩm</label>
+                    <select name="product" class="form-select form-select-sm">
+                        <option value="">Tất cả sản phẩm</option>
+                        {% for product in products %}
+                            <option value="{{ product.id }}" {% if product.id|stringformat:"s" == selected_product %}selected{% endif %}>
+                                {{ product.name }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-2 mb-2">
+                    <label class="form-label small">Size</label>
+                    <select name="size" class="form-select form-select-sm">
+                        <option value="">Tất cả size</option>
+                        {% for size_key, size_label in sizes %}
+                            <option value="{{ size_key }}" {% if size_key == selected_size %}selected{% endif %}>
+                                {{ size_label }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-2 mb-2">
+                    <label class="form-label small">Màu sắc</label>
+                    <select name="color" class="form-select form-select-sm">
+                        <option value="">Tất cả màu</option>
+                        {% for color_key, color_label in colors %}
+                            <option value="{{ color_key }}" {% if color_key == selected_color %}selected{% endif %}>
+                                {{ color_label }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3 mb-2">
+                    <label class="form-label small">Trạng thái tồn kho</label>
+                    <select name="stock_status" class="form-select form-select-sm">
+                        <option value="">Tất cả trạng thái</option>
+                        <option value="in_stock" {% if selected_stock_status == 'in_stock' %}selected{% endif %}>Còn hàng</option>
+                        <option value="low_stock" {% if selected_stock_status == 'low_stock' %}selected{% endif %}>Sắp hết</option>
+                        <option value="out_of_stock" {% if selected_stock_status == 'out_of_stock' %}selected{% endif %}>Hết hàng</option>
+                    </select>
+                </div>
+                <div class="col-md-2 mb-2">
+                    <label class="form-label small">&nbsp;</label>
+                    <div class="d-flex gap-1">
+                        <button type="submit" class="btn btn-primary btn-sm flex-fill">
+                            <i class="fas fa-filter"></i> Lọc
+                        </button>
+                        {% if query or selected_product or selected_size or selected_color or selected_stock_status %}
+                            <a href="{% url 'admin_dashboard:inventory_list' %}" class="btn btn-outline-secondary btn-sm">
+                                <i class="fas fa-times"></i>
+                            </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Inventory table -->
+<div class="table-card">
+    <div class="table-card-header d-flex justify-content-between align-items-center">
+        <h5 class="table-card-title">
+            Tồn kho sản phẩm 
+            <span class="badge bg-secondary">{{ page_obj.paginator.count }}</span>
+        </h5>
+        <div class="btn-group btn-group-sm">
+            <button type="button" class="btn btn-outline-primary" onclick="location.reload()">
+                <i class="fas fa-sync-alt"></i> Làm mới
+            </button>
+        </div>
+    </div>
+    
+    <div class="table-responsive">
+        <table class="table table-hover mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th class="text-nowrap">Sản phẩm</th>
+                    <th class="text-center text-nowrap" style="width: 80px;">Size</th>
+                    <th class="text-center text-nowrap" style="width: 100px;">Màu sắc</th>
+                    <th class="text-center text-nowrap" style="width: 100px;">Số lượng</th>
+                    <th class="text-center text-nowrap d-none d-md-table-cell" style="width: 120px;">SKU</th>
+                    <th class="text-center text-nowrap" style="width: 100px;">Trạng thái</th>
+                    <th class="text-center text-nowrap d-none d-lg-table-cell" style="width: 120px;">Cập nhật</th>
+                    <th class="text-center text-nowrap" style="width: 120px;">Thao tác</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for inventory in page_obj %}
+                <tr>
+                    <td>
+                        <div class="fw-semibold">{{ inventory.product.name }}</div>
+                        <small class="text-muted">{{ inventory.product.category.name }}</small>
+                        <!-- Show SKU on mobile -->
+                        <div class="d-md-none mt-1">
+                            <code class="small">{{ inventory.sku }}</code>
+                        </div>
+                    </td>
+                    <td class="text-center">
+                        <span class="badge bg-secondary">{{ inventory.size }}</span>
+                    </td>
+                    <td class="text-center">
+                        <span class="badge" style="background-color: {{ inventory.color }}; color: white;">
+                            {{ inventory.get_color_display }}
+                        </span>
+                    </td>
+                    <td class="text-center">
+                        <div class="fw-semibold {% if inventory.quantity == 0 %}text-danger{% elif inventory.is_low_stock %}text-warning{% else %}text-success{% endif %}">
+                            {{ inventory.quantity }}
+                        </div>
+                    </td>
+                    <td class="text-center d-none d-md-table-cell">
+                        <code>{{ inventory.sku }}</code>
+                    </td>
+                    <td class="text-center">
+                        {% if inventory.quantity == 0 %}
+                            <span class="badge bg-danger">Hết hàng</span>
+                        {% elif inventory.is_low_stock %}
+                            <span class="badge bg-warning">Sắp hết</span>
+                        {% else %}
+                            <span class="badge bg-success">Còn hàng</span>
+                        {% endif %}
+                    </td>
+                    <td class="text-center d-none d-lg-table-cell">
+                        <div>{{ inventory.updated_at|date:"d/m/Y" }}</div>
+                        <small class="text-muted">{{ inventory.updated_at|date:"H:i" }}</small>
+                    </td>
+                    <td class="text-center">
+                        <div class="btn-group" role="group">
+                            <a href="{% url 'admin_dashboard:inventory_edit' inventory.id %}" class="btn btn-sm btn-outline-primary" title="Chỉnh sửa">
+                                <i class="fas fa-edit"></i>
+                            </a>
+                            <button type="button" class="btn btn-sm btn-outline-danger" title="Xóa" onclick="deleteInventory({{ inventory.id }}, '{{ inventory.product.name }} - {{ inventory.get_color_display }} - {{ inventory.size }}')">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="8" class="text-center py-5 text-muted">
+                        <i class="fas fa-boxes fa-3x mb-3 d-block"></i>
+                        <h5>Chưa có tồn kho nào</h5>
+                        <p>{% if query or selected_product or selected_size or selected_color or selected_stock_status %}Không tìm thấy tồn kho phù hợp với bộ lọc.{% else %}Chưa có tồn kho nào được tạo.{% endif %}</p>
+                        {% if query or selected_product or selected_size or selected_color or selected_stock_status %}
+                            <a href="{% url 'admin_dashboard:inventory_list' %}" class="btn btn-outline-primary">
+                                <i class="fas fa-times me-2"></i>Xóa bộ lọc
+                            </a>
+                        {% else %}
+                            <a href="{% url 'admin_dashboard:inventory_add' %}" class="btn btn-primary">
+                                <i class="fas fa-plus me-2"></i>Thêm tồn kho đầu tiên
+                            </a>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    
+    <!-- Pagination -->
+    {% if page_obj.has_other_pages %}
+    <div class="d-flex justify-content-center py-3">
+        <nav>
+            <ul class="pagination">
+                {% if page_obj.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page=1{% if query %}&q={{ query }}{% endif %}{% if selected_product %}&product={{ selected_product }}{% endif %}{% if selected_size %}&size={{ selected_size }}{% endif %}{% if selected_color %}&color={{ selected_color }}{% endif %}{% if selected_stock_status %}&stock_status={{ selected_stock_status }}{% endif %}">Đầu</a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if query %}&q={{ query }}{% endif %}{% if selected_product %}&product={{ selected_product }}{% endif %}{% if selected_size %}&size={{ selected_size }}{% endif %}{% if selected_color %}&color={{ selected_color }}{% endif %}{% if selected_stock_status %}&stock_status={{ selected_stock_status }}{% endif %}">Trước</a>
+                    </li>
+                {% endif %}
+                
+                <li class="page-item active">
+                    <span class="page-link">{{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</span>
+                </li>
+                
+                {% if page_obj.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if query %}&q={{ query }}{% endif %}{% if selected_product %}&product={{ selected_product }}{% endif %}{% if selected_size %}&size={{ selected_size }}{% endif %}{% if selected_color %}&color={{ selected_color }}{% endif %}{% if selected_stock_status %}&stock_status={{ selected_stock_status }}{% endif %}">Sau</a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if query %}&q={{ query }}{% endif %}{% if selected_product %}&product={{ selected_product }}{% endif %}{% if selected_size %}&size={{ selected_size }}{% endif %}{% if selected_color %}&color={{ selected_color }}{% endif %}{% if selected_stock_status %}&stock_status={{ selected_stock_status }}{% endif %}">Cuối</a>
+                    </li>
+                {% endif %}
+            </ul>
+        </nav>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Inventory Statistics -->
+<div class="row mt-4">
+    <div class="col-md-3">
+        <div class="stat-card text-center">
+            <div class="stat-card-icon mx-auto bg-success text-white">
+                <i class="fas fa-check-circle"></i>
+            </div>
+            <div class="stat-card-value text-success">
+                {{ page_obj.object_list|length|default:0 }}
+            </div>
+            <div class="stat-card-label">Tổng biến thể</div>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="stat-card text-center">
+            <div class="stat-card-icon mx-auto bg-warning text-white">
+                <i class="fas fa-exclamation-triangle"></i>
+            </div>
+            <div class="stat-card-value text-warning">0</div>
+            <div class="stat-card-label">Sắp hết hàng</div>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="stat-card text-center">
+            <div class="stat-card-icon mx-auto bg-danger text-white">
+                <i class="fas fa-times-circle"></i>
+            </div>
+            <div class="stat-card-value text-danger">0</div>
+            <div class="stat-card-label">Hết hàng</div>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="stat-card text-center">
+            <div class="stat-card-icon mx-auto bg-info text-white">
+                <i class="fas fa-boxes"></i>
+            </div>
+            <div class="stat-card-value text-info">0</div>
+            <div class="stat-card-label">Tổng số lượng</div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function deleteInventory(inventoryId, inventoryInfo) {
+    if (confirm(`Bạn có chắc chắn muốn xóa tồn kho "${inventoryInfo}"?`)) {
+        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+        
+        if (!csrfToken) {
+            alert('Không tìm thấy CSRF token');
+            return;
+        }
+        
+        fetch(`/dashboard/inventory/${inventoryId}/delete/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': csrfToken,
+                'X-Requested-With': 'XMLHttpRequest',
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data.success) {
+                alert(data.message);
+                location.reload();
+            } else {
+                alert('Lỗi: ' + data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Có lỗi xảy ra: ' + error.message);
+        });
+    }
+}
+</script>
+{% endblock %}

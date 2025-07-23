@@ -1,0 +1,154 @@
+{% extends 'customer_web/base.html' %}
+{% load static %}
+
+{% block title %}Thanh toán - KiKi{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row">
+        <div class="col-lg-8">
+            <h2 class="mb-4">
+                <i class="fas fa-credit-card text-primary"></i> Thông tin thanh toán
+            </h2>
+            
+            <form method="post">
+                {% csrf_token %}
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">Thông tin người nhận</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-12 mb-3">
+                                <label for="full_name" class="form-label">Họ và tên *</label>
+                                <input type="text" class="form-control" id="full_name" name="full_name" 
+                                       value="{% if user.is_authenticated %}{{ user.first_name }} {{ user.last_name }}{% endif %}" required>
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label for="email" class="form-label">Email *</label>
+                                <input type="email" class="form-control" id="email" name="email" 
+                                       value="{% if user.is_authenticated %}{{ user.email }}{% endif %}" required>
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label for="phone" class="form-label">Số điện thoại *</label>
+                                <input type="tel" class="form-control" id="phone" name="phone" required>
+                            </div>
+                            
+                            <div class="col-12 mb-3">
+                                <label for="address" class="form-label">Địa chỉ giao hàng *</label>
+                                <textarea class="form-control" id="address" name="address" rows="3" required></textarea>
+                            </div>
+                            
+                            <div class="col-12 mb-3">
+                                <label for="notes" class="form-label">Ghi chú đơn hàng</label>
+                                <textarea class="form-control" id="notes" name="notes" rows="2" 
+                                          placeholder="Ghi chú về đơn hàng, ví dụ: thời gian hay chỉ dẫn địa điểm giao hàng chi tiết hơn."></textarea>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">Phương thức thanh toán</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="payment_method" id="cod" value="cod" checked>
+                            <label class="form-check-label" for="cod">
+                                <i class="fas fa-money-bill-wave text-success"></i>
+                                Thanh toán khi nhận hàng (COD)
+                            </label>
+                            <div class="form-text">Thanh toán bằng tiền mặt khi nhận hàng</div>
+                        </div>
+                        
+                        <div class="form-check mt-3">
+                            <input class="form-check-input" type="radio" name="payment_method" id="transfer" value="transfer">
+                            <label class="form-check-label" for="transfer">
+                                <i class="fas fa-university text-primary"></i>
+                                Chuyển khoản ngân hàng
+                            </label>
+                            <div class="form-text">Chuyển khoản trước khi giao hàng</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="d-grid">
+                    <button type="submit" class="btn btn-primary btn-lg">
+                        <i class="fas fa-check-circle"></i> Đặt hàng
+                    </button>
+                </div>
+            </form>
+        </div>
+        
+        <div class="col-lg-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Đơn hàng của bạn</h5>
+                </div>
+                <div class="card-body">
+                    {% for item in cart.items.all %}
+                    <div class="d-flex align-items-center mb-3 pb-3 border-bottom">
+                        {% with item.product.images.first as primary_image %}
+                        {% if primary_image %}
+                        <img src="{{ primary_image.image.url }}" class="rounded me-3" 
+                             style="width: 60px; height: 60px; object-fit: cover;" alt="{{ item.product.name }}">
+                        {% else %}
+                        <div class="bg-light rounded me-3 d-flex align-items-center justify-content-center" 
+                             style="width: 60px; height: 60px;">
+                            <i class="fas fa-image text-muted"></i>
+                        </div>
+                        {% endif %}
+                        {% endwith %}
+                        
+                        <div class="flex-grow-1">
+                            <h6 class="mb-1">{{ item.product.name }}</h6>
+                            {% if item.size %}<small class="text-muted">Size: {{ item.size }}</small><br>{% endif %}
+                            {% if item.color %}<small class="text-muted">Màu: {{ item.color }}</small><br>{% endif %}
+                            <small class="text-muted">Số lượng: {{ item.quantity }}</small>
+                        </div>
+                        
+                        <div class="text-end">
+                            <span class="fw-bold">{{ item.total_price|floatformat:0 }}₫</span>
+                        </div>
+                    </div>
+                    {% endfor %}
+                    
+                    <div class="border-top pt-3">
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>Tạm tính:</span>
+                            <span>{{ cart.total_price|floatformat:0 }}₫</span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>Phí vận chuyển:</span>
+                            <span class="text-success">Miễn phí</span>
+                        </div>
+                        <hr>
+                        <div class="d-flex justify-content-between fw-bold h5">
+                            <span>Tổng cộng:</span>
+                            <span class="text-primary">{{ cart.total_price|floatformat:0 }}₫</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="mt-4">
+                <div class="d-flex align-items-center text-muted">
+                    <i class="fas fa-shield-alt me-2"></i>
+                    <small>Thông tin của bạn được bảo mật tuyệt đối</small>
+                </div>
+                <div class="d-flex align-items-center text-muted mt-2">
+                    <i class="fas fa-truck me-2"></i>
+                    <small>Giao hàng toàn quốc, nhận hàng trong 2-5 ngày</small>
+                </div>
+                <div class="d-flex align-items-center text-muted mt-2">
+                    <i class="fas fa-sync-alt me-2"></i>
+                    <small>Đổi trả miễn phí trong 7 ngày</small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

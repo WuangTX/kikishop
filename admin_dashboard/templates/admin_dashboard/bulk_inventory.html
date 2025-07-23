@@ -1,0 +1,368 @@
+{% extends 'admin_dashboard/base.html' %}
+
+{% block title %}Cập nhật tồn kho hàng loạt - KiKi Admin{% endblock %}
+{% block page_title %}Cập nhật tồn kho hàng loạt{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-body">
+                <form method="post" id="bulkInventoryForm">
+                    {% csrf_token %}
+                    
+                    <div class="mb-4">
+                        <h5>Chọn sản phẩm và biến thể</h5>
+                        <p class="text-muted">Chọn sản phẩm và các biến thể size/màu để cập nhật số lượng tồn kho.</p>
+                        
+                        <!-- Warning about SKU -->
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle me-2"></i>
+                            <strong>Lưu ý:</strong> 
+                            <ul class="mb-0 mt-2">
+                                <li>SKU sẽ được tự động tạo nếu chưa tồn tại</li>
+                                <li>Nếu inventory đã tồn tại, chỉ cập nhật số lượng</li>
+                                <li>Tất cả SKU sẽ được đảm bảo unique trong hệ thống</li>
+                            </ul>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-12 mb-3">
+                            <label for="{{ form.product.id_for_label }}" class="form-label">
+                                Sản phẩm <span class="text-danger">*</span>
+                            </label>
+                            {{ form.product }}
+                            {% if form.product.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.product.errors.0 }}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.sizes.id_for_label }}" class="form-label">
+                                Size <span class="text-danger">*</span>
+                            </label>
+                            {{ form.sizes }}
+                            {% if form.sizes.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.sizes.errors.0 }}
+                                </div>
+                            {% endif %}
+                            <div class="form-text">Chọn một hoặc nhiều size</div>
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.colors.id_for_label }}" class="form-label">
+                                Màu sắc <span class="text-danger">*</span>
+                            </label>
+                            {{ form.colors }}
+                            {% if form.colors.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.colors.errors.0 }}
+                                </div>
+                            {% endif %}
+                            <div class="form-text">Chọn một hoặc nhiều màu</div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.operation.id_for_label }}" class="form-label">
+                                Thao tác <span class="text-danger">*</span>
+                            </label>
+                            {{ form.operation }}
+                            {% if form.operation.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.operation.errors.0 }}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.quantity.id_for_label }}" class="form-label">
+                                Số lượng <span class="text-danger">*</span>
+                            </label>
+                            {{ form.quantity }}
+                            {% if form.quantity.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.quantity.errors.0 }}
+                                </div>
+                            {% endif %}
+                            <div class="form-text" id="quantityHelp">Số lượng để thực hiện thao tác</div>
+                        </div>
+                    </div>
+                    
+                    {% if form.non_field_errors %}
+                        <div class="alert alert-danger">
+                            {% for error in form.non_field_errors %}
+                                <div>{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                    
+                    <!-- Preview section -->
+                    <div id="previewSection" class="mt-4" style="display: none;">
+                        <h6>Xem trước các biến thể sẽ được cập nhật:</h6>
+                        <div id="previewContent" class="bg-light p-3 rounded">
+                            <!-- Content will be populated by JavaScript -->
+                        </div>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between mt-4">
+                        <a href="{% url 'admin_dashboard:inventory_list' %}" class="btn btn-outline-secondary">
+                            <i class="fas fa-arrow-left me-2"></i>Quay lại
+                        </a>
+                        <div>
+                            <button type="button" class="btn btn-outline-primary me-2" id="previewBtn">
+                                <i class="fas fa-eye me-2"></i>Xem trước
+                            </button>
+                            <button type="submit" class="btn btn-success">
+                                <i class="fas fa-save me-2"></i>Cập nhật hàng loạt
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-4">
+        <!-- Instructions -->
+        <div class="card">
+            <div class="card-body">
+                <h6 class="card-title">
+                    <i class="fas fa-info-circle text-info me-2"></i>Hướng dẫn
+                </h6>
+                <div class="small">
+                    <h6>Các thao tác có thể thực hiện:</h6>
+                    <ul class="mb-3">
+                        <li><strong>Đặt thành:</strong> Đặt số lượng tồn kho thành giá trị cụ thể</li>
+                        <li><strong>Tăng thêm:</strong> Tăng số lượng tồn kho hiện tại</li>
+                        <li><strong>Giảm đi:</strong> Giảm số lượng tồn kho hiện tại</li>
+                    </ul>
+                    
+                    <h6>Lưu ý:</h6>
+                    <ul>
+                        <li>Có thể chọn nhiều size và màu cùng lúc</li>
+                        <li>Hệ thống sẽ tạo tự động các biến thể chưa tồn tại</li>
+                        <li>Số lượng tồn kho không thể âm</li>
+                        <li>Nhấn "Xem trước" để kiểm tra trước khi cập nhật</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Operation Examples -->
+        <div class="card mt-3">
+            <div class="card-body">
+                <h6 class="card-title">
+                    <i class="fas fa-lightbulb text-warning me-2"></i>Ví dụ
+                </h6>
+                <div class="small">
+                    <div class="border-bottom pb-2 mb-2">
+                        <strong>Nhập hàng mới:</strong><br>
+                        Chọn "Đặt thành" và nhập số lượng để đặt tồn kho về số lượng cụ thể.
+                    </div>
+                    <div class="border-bottom pb-2 mb-2">
+                        <strong>Bổ sung hàng:</strong><br>
+                        Chọn "Tăng thêm" và nhập số lượng để tăng thêm vào tồn kho hiện tại.
+                    </div>
+                    <div>
+                        <strong>Bán hàng/Hỏng hàng:</strong><br>
+                        Chọn "Giảm đi" và nhập số lượng để giảm từ tồn kho hiện tại.
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Statistics -->
+        <div class="card mt-3">
+            <div class="card-body">
+                <h6 class="card-title">
+                    <i class="fas fa-chart-bar text-success me-2"></i>Thống kê nhanh
+                </h6>
+                <div class="small" id="quickStats">
+                    <div class="d-flex justify-content-between">
+                        <span>Tổng biến thể:</span>
+                        <span id="totalVariants">0</span>
+                    </div>
+                    <div class="d-flex justify-content-between">
+                        <span>Sắp tạo mới:</span>
+                        <span id="newVariants">0</span>
+                    </div>
+                    <div class="d-flex justify-content-between">
+                        <span>Sẽ cập nhật:</span>
+                        <span id="updateVariants">0</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const productField = document.getElementById('{{ form.product.id_for_label }}');
+    const sizeField = document.getElementById('{{ form.sizes.id_for_label }}');
+    const colorField = document.getElementById('{{ form.colors.id_for_label }}');
+    const operationField = document.getElementById('{{ form.operation.id_for_label }}');
+    const quantityField = document.getElementById('{{ form.quantity.id_for_label }}');
+    const previewBtn = document.getElementById('previewBtn');
+    const previewSection = document.getElementById('previewSection');
+    const previewContent = document.getElementById('previewContent');
+    const quantityHelp = document.getElementById('quantityHelp');
+    
+    // Update help text based on operation
+    operationField.addEventListener('change', function() {
+        const operation = this.value;
+        switch(operation) {
+            case 'set':
+                quantityHelp.textContent = 'Số lượng tồn kho sẽ được đặt thành giá trị này';
+                break;
+            case 'add':
+                quantityHelp.textContent = 'Số lượng này sẽ được cộng thêm vào tồn kho hiện tại';
+                break;
+            case 'subtract':
+                quantityHelp.textContent = 'Số lượng này sẽ được trừ đi từ tồn kho hiện tại';
+                break;
+            default:
+                quantityHelp.textContent = 'Số lượng để thực hiện thao tác';
+        }
+    });
+    
+    // Preview functionality
+    previewBtn.addEventListener('click', function() {
+        const productId = productField.value;
+        const selectedSizes = Array.from(sizeField.selectedOptions).map(option => ({
+            value: option.value,
+            text: option.text
+        }));
+        const selectedColors = Array.from(colorField.selectedOptions).map(option => ({
+            value: option.value,
+            text: option.text
+        }));
+        const operation = operationField.value;
+        const quantity = quantityField.value;
+        
+        if (!productId || selectedSizes.length === 0 || selectedColors.length === 0 || !operation || !quantity) {
+            alert('Vui lòng điền đầy đủ thông tin trước khi xem trước');
+            return;
+        }
+        
+        // Generate preview content
+        let html = '<div class="row">';
+        let totalVariants = 0;
+        
+        selectedSizes.forEach(size => {
+            selectedColors.forEach(color => {
+                totalVariants++;
+                const operationText = operation === 'set' ? 'Đặt thành' : 
+                                    operation === 'add' ? 'Tăng thêm' : 'Giảm đi';
+                
+                // Generate preview SKU (simplified)
+                const productName = productField.selectedOptions[0]?.text || 'product';
+                const previewSku = `${productName.toLowerCase().replace(/\s+/g, '-')}-${color.text.toLowerCase()}-${size.text}`;
+                
+                html += `
+                    <div class="col-md-6 mb-2">
+                        <div class="border rounded p-2">
+                            <strong>Size ${size.text} - ${color.text}</strong><br>
+                            <small class="text-muted">${operationText} ${quantity}</small><br>
+                            <small class="text-info">Preview SKU: ${previewSku}</small>
+                        </div>
+                    </div>
+                `;
+            });
+        });
+        
+        html += '</div>';
+        html += `
+            <div class="mt-3 alert alert-warning">
+                <i class="fas fa-exclamation-triangle me-2"></i>
+                <strong>Lưu ý:</strong> SKU thực tế có thể khác nếu đã tồn tại trong hệ thống. 
+                Hệ thống sẽ tự động thêm số thứ tự để đảm bảo unique.
+            </div>
+            <div class="mt-2"><strong>Tổng cộng: ${totalVariants} biến thể</strong></div>
+        `;
+        
+        previewContent.innerHTML = html;
+        previewSection.style.display = 'block';
+        
+        // Update stats
+        document.getElementById('totalVariants').textContent = totalVariants;
+        document.getElementById('newVariants').textContent = '?'; // This would need backend data
+        document.getElementById('updateVariants').textContent = '?'; // This would need backend data
+    });
+    
+    // Form validation
+    const form = document.getElementById('bulkInventoryForm');
+    form.addEventListener('submit', function(e) {
+        const quantity = parseInt(quantityField.value);
+        const operation = operationField.value;
+        const selectedSizes = Array.from(sizeField.selectedOptions);
+        const selectedColors = Array.from(colorField.selectedOptions);
+        const totalVariants = selectedSizes.length * selectedColors.length;
+        
+        if (operation === 'subtract' && quantity < 0) {
+            alert('Số lượng giảm không thể âm');
+            e.preventDefault();
+            return;
+        }
+        
+        if (quantity <= 0) {
+            alert('Số lượng phải lớn hơn 0');
+            e.preventDefault();
+            return;
+        }
+        
+        if (selectedSizes.length === 0) {
+            alert('Vui lòng chọn ít nhất một size');
+            e.preventDefault();
+            return;
+        }
+        
+        if (selectedColors.length === 0) {
+            alert('Vui lòng chọn ít nhất một màu sắc');
+            e.preventDefault();
+            return;
+        }
+        
+        // Confirmation dialog
+        const productName = productField.selectedOptions[0]?.text || 'sản phẩm đã chọn';
+        const operationText = operation === 'set' ? 'đặt thành' : 
+                            operation === 'add' ? 'tăng thêm' : 'giảm đi';
+        
+        const confirmed = confirm(
+            `Bạn có chắc chắn muốn ${operationText} ${quantity} cho ${totalVariants} biến thể của ${productName}?\n\n` +
+            `Thao tác này sẽ:\n` +
+            `- Tạo mới các inventory chưa tồn tại\n` +
+            `- Cập nhật các inventory đã có\n` +
+            `- Tự động tạo SKU unique cho từng biến thể`
+        );
+        
+        if (!confirmed) {
+            e.preventDefault();
+            return;
+        }
+        
+        // Show loading
+        const submitBtn = form.querySelector('button[type="submit"]');
+        const originalText = submitBtn.innerHTML;
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Đang xử lý...';
+        submitBtn.disabled = true;
+        
+        // Re-enable after timeout (fallback)
+        setTimeout(() => {
+            submitBtn.innerHTML = originalText;
+            submitBtn.disabled = false;
+        }, 10000);
+    });
+});
+</script>
+{% endblock %}
