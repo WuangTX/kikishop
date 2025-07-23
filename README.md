@@ -46,7 +46,7 @@ A modern Django-based e-commerce platform specializing in Korean fashion for chi
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/YOUR_USERNAME/kikishop.git
+git clone https://github.com/WuangTX/kikishop.git
 cd kikishop
 ```
 
