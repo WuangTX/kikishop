@@ -1,5 +1,6 @@
 {% extends 'customer_web/base.html' %}
 {% load static %}
+{% load money_filters %}
 
 {% block title %}{{ product.name }} - KiKi{% endblock %}
 
@@ -72,10 +73,10 @@
                 <div class="price mb-4">
                     {% if product.is_on_sale %}
                     <span class="text-muted text-decoration-line-through h4 me-3">
-                        {{ product.price|floatformat:0 }}₫
+{{ product.price|currency_vnd }}
                     </span>
                     <span class="text-primary fw-bold h2">
-                        {{ product.discount_price|floatformat:0 }}₫
+{{ product.discount_price|currency_vnd }}
                     </span>
                     <span class="badge bg-danger ms-2">Sale</span>
                     {% else %}

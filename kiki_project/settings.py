@@ -25,7 +25,7 @@ SECRET_KEY = 'django-insecure-y@t*jp!jd6401)wxdjv58lv$*zky)u#+c0u-8tj1igii@_%6zl
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['192.168.88.24', 'kiki.com', 'localhost',]
+ALLOWED_HOSTS = ['192.168.1.10', 'kiki.com', 'localhost',]
 
 
 # Application definition
@@ -64,6 +64,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'customer_web.context_processors.cart_total_items',
             ],
         },
     },

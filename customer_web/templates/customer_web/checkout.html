@@ -1,5 +1,6 @@
 {% extends 'customer_web/base.html' %}
 {% load static %}
+{% load money_filters %}
 
 {% block title %}Thanh toán - KiKi{% endblock %}
 
@@ -111,7 +112,7 @@
                         </div>
                         
                         <div class="text-end">
-                            <span class="fw-bold">{{ item.total_price|floatformat:0 }}₫</span>
+<span class="fw-bold">{{ item.total_price|currency_vnd }}</span>
                         </div>
                     </div>
                     {% endfor %}
@@ -119,7 +120,7 @@
                     <div class="border-top pt-3">
                         <div class="d-flex justify-content-between mb-2">
                             <span>Tạm tính:</span>
-                            <span>{{ cart.total_price|floatformat:0 }}₫</span>
+<span>{{ cart.total_price|currency_vnd }}</span>
                         </div>
                         <div class="d-flex justify-content-between mb-2">
                             <span>Phí vận chuyển:</span>
@@ -128,7 +129,7 @@
                         <hr>
                         <div class="d-flex justify-content-between fw-bold h5">
                             <span>Tổng cộng:</span>
-                            <span class="text-primary">{{ cart.total_price|floatformat:0 }}₫</span>
+<span class="text-primary">{{ cart.total_price|currency_vnd }}</span>
                         </div>
                     </div>
                 </div>

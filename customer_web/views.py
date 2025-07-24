@@ -91,10 +91,15 @@ def product_list(request):
 # Product detail
 def product_detail(request, slug):
     product = get_object_or_404(Product, slug=slug, is_active=True)
-    related_products = Product.objects.filter(
-        category=product.category, 
-        is_active=True
-    ).exclude(id=product.id)[:4]
+    # Lấy danh mục đầu tiên (nếu có) để gợi ý sản phẩm liên quan
+    first_category = product.categories.first()
+    if first_category:
+        related_products = Product.objects.filter(
+            categories=first_category,
+            is_active=True
+        ).exclude(id=product.id)[:4]
+    else:
+        related_products = Product.objects.filter(is_active=True).exclude(id=product.id)[:4]
     
     # Convert sizes and colors from string to list
     sizes_list = [size.strip() for size in product.sizes.split(',') if size.strip()] if product.sizes else []

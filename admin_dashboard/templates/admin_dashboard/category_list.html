@@ -114,9 +114,12 @@
                                         </li>
                                         <li><hr class="dropdown-divider"></li>
                                         <li>
-                                            <button class="dropdown-item text-danger" onclick="deleteCategory({{ category.id }}, '{{ category.name }}')">
-                                                <i class="fas fa-trash me-2"></i>Xóa
-                                            </button>
+                                            <form method="post" action="{% url 'admin_dashboard:category_delete' category.id %}" style="display:inline;">
+                                                {% csrf_token %}
+                                                <button type="submit" class="dropdown-item text-danger" onclick="return confirm('Bạn có chắc chắn muốn xóa danh mục {{ category.name }}?');">
+                                                    <i class="fas fa-trash me-2"></i>Xóa
+                                                </button>
+                                            </form>
                                         </li>
                                     </ul>
                                 </div>
@@ -187,32 +190,6 @@
 
 {% block extra_js %}
 <script>
-function deleteCategory(categoryId, categoryName) {
-    if (confirm(`Bạn có chắc chắn muốn xóa danh mục "${categoryName}"?`)) {
-        fetch(`/admin/categories/${categoryId}/delete/`, {
-            method: 'POST',
-            headers: {
-                'X-CSRFToken': getCookie('csrftoken'),
-                'X-Requested-With': 'XMLHttpRequest',
-            },
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                showAlert('success', data.message);
-                setTimeout(() => {
-                    location.reload();
-                }, 1500);
-            } else {
-                showAlert('error', data.message);
-            }
-        })
-        .catch(error => {
-            showAlert('error', 'Có lỗi xảy ra khi xóa danh mục');
-        });
-    }
-}
-
 function toggleCategoryStatus(categoryId, categoryName) {
     fetch(`/admin/categories/${categoryId}/toggle/`, {
         method: 'POST',
@@ -236,7 +213,6 @@ function toggleCategoryStatus(categoryId, categoryName) {
         showAlert('error', 'Có lỗi xảy ra khi thay đổi trạng thái');
     });
 }
-
 // Helper function to get CSRF token
 function getCookie(name) {
     let cookieValue = null;

@@ -23,8 +23,12 @@ class ProductInventoryInline(admin.TabularInline):
 
 @admin.register(Product)
 class ProductAdmin(admin.ModelAdmin):
-    list_display = ['name', 'category', 'price', 'discount_price', 'stock', 'is_featured', 'is_active']
-    list_filter = ['category', 'is_featured', 'is_active', 'created_at']
+    def categories_display(self, obj):
+        return ", ".join([c.name for c in obj.categories.all()])
+    categories_display.short_description = 'Danh mục'
+
+    list_display = ['name', 'categories_display', 'price', 'discount_price', 'stock', 'is_featured', 'is_active']
+    list_filter = ['categories', 'is_featured', 'is_active', 'created_at']
     search_fields = ['name', 'description']
     prepopulated_fields = {'slug': ('name',)}
     inlines = [ProductImageInline, ProductInventoryInline]
@@ -33,7 +37,7 @@ class ProductAdmin(admin.ModelAdmin):
 @admin.register(ProductInventory)
 class ProductInventoryAdmin(admin.ModelAdmin):
     list_display = ['product', 'size', 'color', 'quantity', 'sku', 'is_in_stock', 'is_low_stock']
-    list_filter = ['size', 'color', 'product__category']
+    list_filter = ['size', 'color', 'product__categories']
     search_fields = ['product__name', 'sku']
     list_editable = ['quantity']
     readonly_fields = ['sku', 'created_at', 'updated_at']

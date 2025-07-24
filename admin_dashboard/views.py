@@ -191,7 +191,7 @@ def product_list(request):
     query = request.GET.get('q', '')
     category_id = request.GET.get('category', '')
     
-    products = Product.objects.select_related('category').order_by('-created_at')
+    products = Product.objects.prefetch_related('categories').order_by('-created_at')
     
     if query:
         products = products.filter(

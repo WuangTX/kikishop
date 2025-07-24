@@ -1,5 +1,6 @@
 {% extends 'customer_web/base.html' %}
 {% load static %}
+{% load money_filters %}
 
 {% block title %}Lịch sử đơn hàng - KiKi{% endblock %}
 
@@ -62,7 +63,7 @@
                                     </div>
                                     <div class="col-md-4 text-md-end">
                                         <h6>Tổng tiền:</h6>
-                                        <p class="h5 text-primary mb-0">{{ order.total_amount|floatformat:0 }}₫</p>
+<p class="h5 text-primary mb-0">{{ order.total_amount|currency_vnd }}</p>
                                     </div>
                                 </div>
                                 
@@ -98,8 +99,8 @@
                                                 <td>{{ item.size|default:"-" }}</td>
                                                 <td>{{ item.color|default:"-" }}</td>
                                                 <td>{{ item.quantity }}</td>
-                                                <td>{{ item.price|floatformat:0 }}₫</td>
-                                                <td>{{ item.total_price|floatformat:0 }}₫</td>
+<td>{{ item.price|currency_vnd }}</td>
+<td>{{ item.total_price|currency_vnd }}</td>
                                             </tr>
                                             {% endfor %}
                                         </tbody>

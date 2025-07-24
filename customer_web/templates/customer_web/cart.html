@@ -1,4 +1,5 @@
 {% extends 'customer_web/base.html' %}
+{% load money_filters %}
 
 {% block title %}Giỏ hàng - KiKi{% endblock %}
 
@@ -37,24 +38,24 @@
                                 </div>
                                 
                                 <div class="col-md-2">
-                                    <span class="fw-bold">{{ item.product.get_price|floatformat:0 }}₫</span>
+                                    <span class="fw-bold">{{ item.product.get_price|currency_vnd }}</span>
                                 </div>
                                 
                                 <div class="col-md-2">
-                                    <div class="input-group">
-                                        <button class="btn btn-outline-secondary btn-sm" type="button" 
-                                                onclick="updateQuantity({{ item.id }}, {{ item.quantity }} - 1)">-</button>
-                                        <input type="number" class="form-control form-control-sm text-center" 
-                                               value="{{ item.quantity }}" min="1" id="qty-{{ item.id }}"
-                                               onchange="updateQuantity({{ item.id }}, this.value)">
-                                        <button class="btn btn-outline-secondary btn-sm" type="button" 
-                                                onclick="updateQuantity({{ item.id }}, {{ item.quantity }} + 1)">+</button>
+                                <div class="input-group">
+                                    <button class="btn btn-outline-secondary btn-sm" type="button" 
+                                            onclick="updateQuantity({{ item.id }}, parseInt(document.getElementById('qty-{{ item.id }}').value) - 1)">-</button>
+                                    <input type="number" class="form-control form-control-sm text-center" 
+                                        value="{{ item.quantity }}" min="1" id="qty-{{ item.id }}"
+                                        onchange="updateQuantity({{ item.id }}, this.value)">
+                                    <button class="btn btn-outline-secondary btn-sm" type="button" 
+                                            onclick="updateQuantity({{ item.id }}, parseInt(document.getElementById('qty-{{ item.id }}').value) + 1)">+</button>
                                     </div>
                                 </div>
                                 
                                 <div class="col-md-1">
                                     <span class="fw-bold" id="item-total-{{ item.id }}">
-                                        {{ item.total_price|floatformat:0 }}₫
+                                        {{ item.total_price|currency_vnd }}
                                     </span>
                                 </div>
                                 
@@ -82,7 +83,7 @@
                             </div>
                             <div class="d-flex justify-content-between mb-2">
                                 <span>Tạm tính:</span>
-                                <span id="subtotal">{{ cart.total_price|floatformat:0 }}₫</span>
+<span id="subtotal">{{ cart.total_price|currency_vnd }}</span>
                             </div>
                             <div class="d-flex justify-content-between mb-2">
                                 <span>Phí vận chuyển:</span>
@@ -91,7 +92,7 @@
                             <hr>
                             <div class="d-flex justify-content-between fw-bold">
                                 <span>Tổng cộng:</span>
-                                <span class="text-primary" id="total-price">{{ cart.total_price|floatformat:0 }}₫</span>
+<span class="text-primary" id="total-price">{{ cart.total_price|currency_vnd }}</span>
                             </div>
                             
                             <div class="d-grid gap-2 mt-4">
@@ -127,10 +128,18 @@
 function updateQuantity(itemId, quantity) {
     quantity = parseInt(quantity);
     if (quantity < 1) {
-        removeFromCart(itemId);
+        // Kiểm tra số lượng hiện tại
+        const currentQty = parseInt(document.getElementById('qty-' + itemId).value);
+        if (currentQty === 1) {
+            if (confirm('Bạn có chắc muốn xóa sản phẩm này khỏi giỏ hàng?')) {
+                removeFromCart(itemId);
+            }
+        } else {
+            // Nếu số lượng hiện tại > 1 thì không cho giảm về 0
+            document.getElementById('qty-' + itemId).value = 1;
+        }
         return;
     }
-    
     fetch('{% url "customer_web:update_cart" %}', {
         method: 'POST',
         headers: {
@@ -156,8 +165,6 @@ function updateQuantity(itemId, quantity) {
             const itemPrice = parseFloat(document.querySelector('#cart-item-' + itemId + ' .fw-bold').textContent.replace('₫', '').replace(',', ''));
             const itemTotal = itemPrice * quantity;
             document.getElementById('item-total-' + itemId).textContent = itemTotal.toLocaleString() + '₫';
-            
-            showAlert('success', 'Đã cập nhật giỏ hàng');
         } else {
             showAlert('danger', data.message);
         }

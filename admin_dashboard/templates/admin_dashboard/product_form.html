@@ -68,17 +68,17 @@
                             <input type="text" class="form-control" id="name" name="name" value="{% if product %}{{ product.name }}{% endif %}" required>
                         </div>
                         
-                        <!-- Danh mục -->
+                        <!-- Danh mục (nhiều lựa chọn) -->
                         <div class="col-md-4">
-                            <label for="category" class="form-label">Danh mục <span class="text-danger">*</span></label>
-                            <select class="form-select" id="category" name="category" required>
-                                <option value="">Chọn danh mục</option>
+                            <label for="categories" class="form-label">Danh mục <span class="text-danger">*</span></label>
+                            <select class="form-select" id="categories" name="categories" multiple required>
                                 {% for category in categories %}
-                                    <option value="{{ category.id }}" {% if product and product.category_id == category.id %}selected{% endif %}>
+                                    <option value="{{ category.id }}" {% if product_category_ids and category.id in product_category_ids %}selected{% endif %}>
                                         {{ category.name }}
                                     </option>
                                 {% endfor %}
                             </select>
+                            <small class="form-text text-muted">Giữ Ctrl (Windows) hoặc Cmd (Mac) để chọn nhiều danh mục</small>
                         </div>
                         
                         <!-- Mô tả -->

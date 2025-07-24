@@ -46,7 +46,7 @@ class Product(models.Model):
     
     name = models.CharField(max_length=200, verbose_name="Tên sản phẩm")
     slug = models.SlugField(unique=True)
-    category = models.ForeignKey(Category, on_delete=models.CASCADE, related_name='products')
+    categories = models.ManyToManyField(Category, related_name='products', verbose_name="Danh mục")
     description = models.TextField(verbose_name="Mô tả")
     price = models.DecimalField(max_digits=10, decimal_places=0, verbose_name="Giá")
     discount_price = models.DecimalField(max_digits=10, decimal_places=0, blank=True, null=True, verbose_name="Giá khuyến mãi")

@@ -1,5 +1,6 @@
 {% extends 'customer_web/base.html' %}
 {% load static %}
+{% load money_filters %}
 
 {% block title %}KiKi - Thời trang Hàn Quốc{% endblock %}
 
@@ -29,32 +30,32 @@
                     </p>
                     <div class="hero-stats mb-4">
                         <div class="row text-center">
-                            <div class="col-3">
+                            <div class="col-4">
                                 <div class="stat-item">
                                     <img src="{% static 'customer_web/images/quality.jpg' %}" 
-                                           alt="Chất lượng" class="img-fluid mb-2" style="width: 200px;">
+                                           alt="Chất lượng" class="img-fluid mb-2" style="width: 200px; border-radius: 5px;">
                                 </div>
                             </div>
-                            <div class="col-3">
+                            <div class="col-4">
                                 <div class="stat-item">
                                     <img src="{% static 'customer_web/images/fast-delivery.jpg' %}" 
-                                           alt="Giao hàng nhanh" class="img-fluid mb-2" style="width: 200px;">
+                                           alt="Giao hàng nhanh" class="img-fluid mb-2" style="width: 200px; border-radius: 5px;">
                                 </div>
                             </div>
-                            <div class="col-3">
+                            <div class="col-4">
                                 <div class="stat-item">
                                     <img src="{% static 'customer_web/images/rate.jpg' %}" 
-                                           alt="Đánh giá" class="img-fluid mb-2" style="width: 200px;">
+                                           alt="Đánh giá" class="img-fluid mb-2" style="width: 200px; border-radius: 5px;">
                                 </div>
                             </div>
                         </div>
                     </div>
                     <div class="hero-buttons" style="position: relative; z-index: 10;">
-                        <a href="{% url 'customer_web:product_list' %}" class="btn btn-primary btn-lg px-4 py-3 me-3 shadow-lg" style="pointer-events: auto; position: relative; z-index: 10;" onclick="console.log('Button clicked!'); return true;">
+                        <a href="{% url 'customer_web:product_list' %}" class="btn btn-primary btn-lg px-3 py-3 me-3 fs-6" style="pointer-events: auto; position: relative; z-index: 10;" onclick="console.log('Button clicked!'); return true;">
                             <i class="fas fa-shopping-bag me-2"></i>
                             Mua sắm ngay
                         </a>
-                        <a href="#categories" class="btn btn-outline-dark btn-lg px-4 py-3" style="pointer-events: auto; position: relative; z-index: 10;">
+                        <a href="#categories" class="btn btn-outline-dark btn-lg px-4 py-3 fs-6" style="pointer-events: auto; position: relative; z-index: 10;">
                             <i class="fas fa-play-circle me-2"></i>
                             Khám phá
                         </a>
@@ -145,17 +146,17 @@
                         <div class="price mb-2">
                             {% if product.is_on_sale %}
                             <span class="text-muted text-decoration-line-through me-2">
-                                {{ product.price|floatformat:0 }}₫
+                                {{ product.price|currency_vnd }}
                             </span>
                             <span class="text-danger fw-bold">
-                                {{ product.discount_price|floatformat:0 }}₫
+                                {{ product.discount_price|currency_vnd }}
                             </span>
                             <span class="badge bg-warning text-dark ms-1">
                                 -{{ product.discount_percentage }}%
                             </span>
                             {% else %}
                             <span class="text-primary fw-bold">
-                                {{ product.price|floatformat:0 }}₫
+                                {{ product.price|currency_vnd }}
                             </span>
                             {% endif %}
                         </div>
@@ -232,14 +233,14 @@
                         <div class="price mb-2">
                             {% if product.is_on_sale %}
                             <span class="text-muted text-decoration-line-through me-2">
-                                {{ product.price|floatformat:0 }}₫
+                                {{ product.price|currency_vnd }}
                             </span>
                             <span class="text-primary fw-bold">
-                                {{ product.discount_price|floatformat:0 }}₫
+                                {{ product.discount_price|currency_vnd }}
                             </span>
                             {% else %}
                             <span class="text-primary fw-bold">
-                                {{ product.price|floatformat:0 }}₫
+                                {{ product.price|currency_vnd }}
                             </span>
                             {% endif %}
                         </div>
@@ -299,14 +300,14 @@
                         <div class="price mb-2">
                             {% if product.is_on_sale %}
                             <span class="text-muted text-decoration-line-through me-2">
-                                {{ product.price|floatformat:0 }}₫
+                                {{ product.price|currency_vnd }}
                             </span>
                             <span class="text-primary fw-bold">
-                                {{ product.discount_price|floatformat:0 }}₫
+                                {{ product.discount_price|currency_vnd }}
                             </span>
                             {% else %}
                             <span class="text-primary fw-bold">
-                                {{ product.price|floatformat:0 }}₫
+                                {{ product.price|currency_vnd }}
                             </span>
                             {% endif %}
                         </div>
@@ -431,6 +432,75 @@
 
 .hero-decoration {
     pointer-events: none !important;
+}
+
+.hero-img {
+    border-radius: 20px;
+    transform: rotate(2deg);
+    transition: transform 0.3s ease;
+    max-height: 600px;
+    width: 100%;
+    object-fit: cover;
+}
+.hero-img:hover {
+    transform: rotate(0deg) scale(1.02);
+}
+
+/* Enhanced Hero Section */
+.hero-section {
+    background: linear-gradient(135deg, #ffffffff 0%, #ffffffff 100%);
+    min-height: 80vh;
+}
+        
+.hero-bg {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000"><polygon fill="%23ff6b9d15" points="0,1000 1000,1000 1000,200 0,600"/><polygon fill="%234ecdc415" points="0,800 1000,400 1000,0 0,0"/></svg>') no-repeat center center;
+    background-size: cover;
+    opacity: 0.3;
+}
+.hero-content {
+    animation: slideInLeft 1s ease-out;
+}
+
+.hero-image-container {
+    animation: slideInRight 1s ease-out;
+}
+
+.hero-decoration {
+    position: absolute;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+    opacity: 0.1;
+}
+        
+.hero-decoration-1 {
+    width: 200px;
+    height: 200px;
+    top: -50px;
+    right: -50px;
+    animation: rotate 20s linear infinite;
+}
+
+.hero-decoration-2 {
+    width: 150px;
+    height: 150px;
+    bottom: -30px;
+    left: -30px;
+    animation: rotate 15s linear infinite reverse;
+}
+.hero-buttons .btn {
+    width: 166px;
+    border-radius: 50px;
+    font-weight: 300;
+    transition: all 0.3s ease;
+}
+
+.hero-buttons .btn:hover {
+    transform: translateY(-2px);
 }
 
 .floating-card {

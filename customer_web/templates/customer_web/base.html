@@ -36,13 +36,12 @@
         .navbar .container {
             padding: 0;
         }
-        
         .navbar-brand {
-            font-weight: 700;
-            color: var(--primary-color) !important;
-            font-size: 1.8rem;
-            padding: 0;
-            margin: 0;
+            width:80px;
+        }
+        .navbar-brand img {
+            width: auto;
+            height: 70px;
         }
 
         .nav-link {
@@ -58,6 +57,18 @@
             border-radius: 5px;
             transform: translateY(-2px);
         }
+        .navbar-toggler-icon {
+            display: inline-block;
+            width: 0.8em;
+            height: 0.8em;
+            vertical-align: middle;
+            background-image: var(--bs-navbar-toggler-icon-bg);
+            background-repeat: no-repeat;
+            background-position: center;
+            background-size: 100%;
+        }
+
+
         
         /* Dropdown hover effects - only on desktop */
         @media (min-width: 992px) {
@@ -80,16 +91,22 @@
                 opacity: 1 !important;
                 transform: translateY(0) !important;
             }
+            .hamburger-menu {
+                background-color: #e55a8a;
+                border: none;
+                padding: 10px 15px;
+                border-radius: 8px;
+                color: white;
+                font-size: 14px;
+                margin-right: 14px;
+                transition: all 0.3s ease;
+                cursor: pointer;
+        }
         }
         
         .dropdown-menu:not(.hamburger-dropdown) {
-            opacity: 0;
             transform: translateY(-10px);
             transition: all 0.3s ease;
-            border: none;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-            border-radius: 10px;
-            margin-top: 10px;
         }
         
         /* Show dropdown when Bootstrap adds 'show' class */
@@ -101,15 +118,8 @@
         /* Mobile/Tablet specific dropdown styles */
         @media (max-width: 991px) {
             .dropdown-menu:not(.hamburger-dropdown) {
-                position: absolute;
-                top: 100%;
-                left: 0;
-                z-index: 1000;
-                min-width: 200px;
+                min-width: 300px;
                 background-color: white;
-                border: 1px solid #ddd;
-                border-radius: 8px;
-                box-shadow: 0 4px 15px rgba(0,0,0,0.15);
                 margin-top: 5px;
             }
             
@@ -121,6 +131,22 @@
                 display: block;
                 opacity: 1;
                 transform: translateY(0);
+            }
+             .hamburger-menu {
+                background-color: #e55a8a;
+                border: none;
+                padding: 10px 15px;
+                border-radius: 8px;
+                color: white;
+                font-size: 14px;
+                margin-right: 300px;
+                transition: all 0.3s ease;
+                cursor: pointer;
+            }
+            .dropdown-menu[data-bs-popper] {
+                top: 128%;
+                right: -3%;
+                margin-top: var(--bs-dropdown-spacer);
             }
         }
         
@@ -145,19 +171,6 @@
             transform: scale(1.2);
             color: var(--primary-color);
         }
-
-        /* Hamburger Menu Styles */
-        .hamburger-menu {
-            background-color: #e55a8a;
-            border: none;
-            padding: 10px 15px;
-            border-radius: 8px;
-            color: white;
-            font-size: 14px;
-            margin-right: 10px;
-            transition: all 0.3s ease;
-            cursor: pointer;
-        }
         
         .hamburger-menu:hover {
             background-color: #d1477a;
@@ -170,12 +183,11 @@
             border: 1px solid #ddd;
             border-radius: 8px;
             box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-            min-width: 200px;
+            min-width: 660px;
         }
         
         .hamburger-dropdown .dropdown-item {
             padding: 10px 15px;
-            color: #333;
             transition: all 0.3s ease;
             border: none;
         }
@@ -207,7 +219,7 @@
         
         .hamburger-products-mega {
             position: absolute !important;
-            left: 100% !important;
+            left: -34% !important;
             top: 0 !important;
             min-width: 600px;
             background-color: white;
@@ -224,6 +236,19 @@
         
         /* Mobile: Show submenu below instead of to the side */
         @media (max-width: 768px) {
+            .navbar-brand {
+                width:80px;
+            }
+            .navbar-brand img {
+                width: auto;
+                height: 50px;
+            }
+            .cart-link {
+            
+            }
+            .search-toggle {
+                margin-left: auto !important;
+            }
             .hamburger-products-mega {
                 position: absolute !important;
                 left: 50% !important;
@@ -232,15 +257,37 @@
                 transform: translateX(-50%) translateY(-5px) !important;
             }
             
+            /* Disable hover effects on mobile/tablet */
             .dropdown-submenu:hover .hamburger-products-mega {
+                display: none !important;
+                opacity: 0 !important;
+            }
+            
+            /* Only show when active class is present */
+            .dropdown-submenu.active .hamburger-products-mega {
+                display: block !important;
+                opacity: 1 !important;
                 transform: translateX(-50%) translateY(0) !important;
+            }
+            .hamburger-menu {
+                border: none;
+                margin-right: auto;
             }
         }
         
-        .dropdown-submenu:hover .hamburger-products-mega {
+        /* Desktop hover effects */
+        @media (min-width: 769px) {
+            .dropdown-submenu:hover .hamburger-products-mega {
+                display: block;
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+        
+        /* Show submenu when clicked/active */
+        .dropdown-submenu.active .hamburger-products-mega {
             display: block;
             opacity: 1;
-            transform: translateX(0);
         }
         
         .hamburger-category-section {
@@ -305,6 +352,11 @@
                 left: 50% !important;
                 transform: translateX(-50%) !important;
             }
+            .dropdown-menu:not(.hamburger-dropdown) {
+                min-width: 300px;
+                background-color: white;
+                margin-top: 5px;
+            }
             
             .hamburger-products-mega {
                 left: 50% !important;
@@ -336,11 +388,14 @@
                 padding: 8px 12px;
                 font-size: 12px;
             }
-            
+            .dropdown-menu[data-bs-popper] {
+                top: 115%;
+            }
+
             .hamburger-dropdown {
-                min-width: 280px;
+                min-width: 350px;
                 max-width: calc(100vw - 15px);
-                left: 50% !important;
+                left: 130% !important;
                 transform: translateX(-50%) !important;
             }
             
@@ -572,23 +627,7 @@
             padding: 4rem 0;
         }
         
-        /* Enhanced Hero Section */
-        .hero-section {
-            background: linear-gradient(135deg, #ffffffff 0%, #ffffffff 100%);
-            min-height: 100vh;
-            position: relative;
-        }
         
-        .hero-bg {
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000"><polygon fill="%23ff6b9d15" points="0,1000 1000,1000 1000,200 0,600"/><polygon fill="%234ecdc415" points="0,800 1000,400 1000,0 0,0"/></svg>') no-repeat center center;
-            background-size: cover;
-            opacity: 0.3;
-        }
         
         .min-vh-75 {
             min-height: 75vh;
@@ -603,28 +642,8 @@
         
         .bg-primary-soft {
             background-color: rgba(255, 107, 157, 0.1) !important;
-        }
+        }    
         
-        .hero-content {
-            animation: slideInLeft 1s ease-out;
-        }
-        
-        .hero-image-container {
-            animation: slideInRight 1s ease-out;
-        }
-        
-        .hero-img {
-            border-radius: 20px;
-            transform: rotate(2deg);
-            transition: transform 0.3s ease;
-            max-height: 600px;
-            width: 100%;
-            object-fit: cover;
-        }
-        
-        .hero-img:hover {
-            transform: rotate(0deg) scale(1.02);
-        }
         
         .floating-card {
             animation: floating 3s ease-in-out infinite;
@@ -642,28 +661,7 @@
             animation-delay: 1.5s;
         }
         
-        .hero-decoration {
-            position: absolute;
-            border-radius: 50%;
-            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
-            opacity: 0.1;
-        }
         
-        .hero-decoration-1 {
-            width: 200px;
-            height: 200px;
-            top: -50px;
-            right: -50px;
-            animation: rotate 20s linear infinite;
-        }
-        
-        .hero-decoration-2 {
-            width: 150px;
-            height: 150px;
-            bottom: -30px;
-            left: -30px;
-            animation: rotate 15s linear infinite reverse;
-        }
         
         .scroll-indicator {
             animation: bounce 2s infinite;
@@ -700,15 +698,6 @@
             transform: translateY(-5px);
         }
         
-        .hero-buttons .btn {
-            border-radius: 50px;
-            font-weight: 600;
-            transition: all 0.3s ease;
-        }
-        
-        .hero-buttons .btn:hover {
-            transform: translateY(-2px);
-        }
         
         /* Animations */
         @keyframes slideInLeft {
@@ -778,11 +767,10 @@
         .search-toggle {
             background-color: #e55a8a;
             border: none;
-            padding: 8px 12px;
+            padding: 5px 12px;
             border-radius: 5px;
             color: white;
-            font-size: 14px;
-            margin-left: 10px;
+            font-size: 12px;
             transition: all 0.3s ease;
         }
         
@@ -820,7 +808,7 @@
         }
         
         /* Hide desktop search on mobile */
-        @media (max-width: 991px) {
+        @media (max-width: 1200px) {
             .desktop-search {
                 display: none !important;
             }
@@ -830,13 +818,44 @@
             }
         }
         
-        @media (min-width: 992px) {
+        @media (min-width: 1201px) {
             .search-toggle {
                 display: none;
             }
             
             .mobile-search-container {
                 display: none !important;
+            }
+        }
+
+        @media (max-width: 991px) {
+            .scroll-indicator {
+                display: none;
+            }
+            
+            .mobile-user-avatar {
+                width: 30px;
+                height:30px;
+                border-radius: 50%;
+                margin-right: 10px;
+                background: #4ecdc4;
+                color: white;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-weight: bold;
+                font-size: 16px;
+                margin-left: 10px;
+                text-decoration: none;
+                border: 2px solid white;
+                box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            }
+
+            .mobile-user-menu {
+                min-width: 200px;
+                padding: 8px 0;
+                border-radius: 8px;
+                box-shadow: 0 2px 10px rgba(0,0,0,0.1);
             }
         }
     </style>
@@ -848,7 +867,7 @@
     <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm sticky-top">
         <div class="container">
             <a class="navbar-brand p-0 m-0" href="{% url 'customer_web:home' %}">
-                <img src="{% static 'customer_web/images/logo.jpg' %}" alt="KiKi Logo" class="d-inline-block" style="height: 70px; width: auto; margin: 0; padding: 0;">
+                <img src="{% static 'customer_web/images/logo.jpg' %}" alt="KiKi Logo" class="d-inline-block" style="margin: 0; padding: 0;">
             </a>
             <!-- Hamburger Menu Button -->
             <div class="dropdown">
@@ -862,7 +881,7 @@
                     
                     <!-- Tất cả sản phẩm với submenu -->
                     <li class="dropdown-submenu">
-                        <a class="dropdown-item dropdown-toggle" href="{% url 'customer_web:product_list' %}" role="button">
+                        <a class="dropdown-item dropdown-toggle">
                             <i class="fas fa-shopping-bag me-2"></i>Tất cả sản phẩm
                         </a>
                         <div class="dropdown-menu hamburger-products-mega">
@@ -952,13 +971,8 @@
             <button class="search-toggle" type="button">
                 <i class="fas fa-search"></i>
             </button>
-            
-            
-            
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            
+
+               
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav me-auto">
                     <!-- Quần áo bé gái -->
@@ -1052,13 +1066,6 @@
                 </form>
                 <!-- User menu -->
                 <ul class="navbar-nav">
-                    <li class="nav-item">
-                        <a class="nav-link position-relative cart-link" href="{% url 'customer_web:cart' %}">
-                            <i class="fas fa-shopping-cart"></i>
-                            <span id="cart-badge" class="cart-badge">0</span>
-                        </a>
-                    </li>
-                    
                     {% if user.is_authenticated %}
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
@@ -1072,14 +1079,51 @@
                     </li>
                     {% else %}
                     <li class="nav-item">
-                        <a class="nav-link" href="{% url 'customer_web:login' %}">Đăng nhập</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{% url 'customer_web:register' %}">Đăng ký</a>
+                        <a class="nav-link" href="{% url 'customer_web:login' %}"><i class="fas fa-user"></i></a>
                     </li>
                     {% endif %}
                 </ul>
             </div>
+              <!-- Cart Icon - Always visible -->
+            <a class="nav-link position-relative cart-link d-flex" href="{% url 'customer_web:cart' %}">
+                <i class="fas fa-shopping-cart"></i>
+                <span id="cart-badge" class="cart-badge">{{ cart_total_items }}</span>
+            </a>
+
+            
+            <!-- Mobile User Avatar -->
+            {% if user.is_authenticated %}
+            <div class="dropdown d-lg-none">
+                <a href="#" class="mobile-user-avatar dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                    {{ user.first_name|default:user.username|make_list|first|upper }}
+                </a>
+                <ul class="dropdown-menu dropdown-menu-end mobile-user-menu">
+                    <li><a class="dropdown-item" href="{% url 'customer_web:profile' %}">
+                        <i class="fas fa-user me-2"></i>Hồ sơ
+                    </a></li>
+                    <li><a class="dropdown-item" href="{% url 'customer_web:order_history' %}">
+                        <i class="fas fa-shopping-bag me-2"></i>Đơn hàng
+                    </a></li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li><a class="dropdown-item" href="{% url 'customer_web:logout' %}">
+                        <i class="fas fa-sign-out-alt me-2"></i>Đăng xuất
+                    </a></li>
+                </ul>
+            </div>
+        {% else %}
+            <div class="nav-item dropdown">
+                <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                    <i class="fas fa-user"></i>
+                </a>
+                <div class="dropdown-menu">
+                    <a class="dropdown-item" href="{% url 'customer_web:login' %}">Đăng nhập</a>
+                    <a class="dropdown-item" href="{% url 'customer_web:register' %}">Đăng ký</a>
+                </div>
+            </div>
+        {% endif %}
+
+
+
         </div>
     </nav>
 
@@ -1090,10 +1134,7 @@
                 <div class="input-group">
                     <input class="form-control" type="search" name="search" placeholder="Tìm kiếm sản phẩm..." value="{{ request.GET.search }}">
                     <button class="btn btn-primary" type="submit">
-                        <i class="fas fa-search me-2"></i>Tìm kiếm
-                    </button>
-                    <button class="btn btn-outline-secondary" type="button" id="closeMobileSearch">
-                        <i class="fas fa-times"></i>
+                        <i class="fas fa-search me-1"></i>
                     </button>
                 </div>
             </form>
@@ -1200,6 +1241,7 @@
         .then(res => res.json())
         .then(data => {
             if (data.success) {
+                // Update cart badge visually
                 document.getElementById('cart-badge').textContent = data.cart_total;
                 showAlert('success', data.message);
             } else {
@@ -1225,6 +1267,11 @@
     }
 
     document.addEventListener('DOMContentLoaded', function () {
+        // Ensure cart badge is always visible and correct on page load
+        var cartBadge = document.getElementById('cart-badge');
+        if (cartBadge && typeof {{ cart_total_items|default:0 }} !== 'undefined') {
+            cartBadge.textContent = {{ cart_total_items|default:0 }};
+        }
         // Initialize Bootstrap dropdowns
         const dropdownElements = document.querySelectorAll('[data-bs-toggle="dropdown"]');
         dropdownElements.forEach(el => {
@@ -1297,7 +1344,6 @@
         // Mobile Search functionality
         const mobileSearchToggle = document.querySelector('.search-toggle');
         const searchContainer = document.getElementById('mobileSearchContainer');
-        const closeMobileSearch = document.getElementById('closeMobileSearch');
 
         if (mobileSearchToggle && searchContainer) {
             // Toggle search when clicking search button
@@ -1307,15 +1353,6 @@
                 toggleMobileSearch();
             });
 
-            // Close search when clicking close button
-            if (closeMobileSearch) {
-                closeMobileSearch.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    searchContainer.classList.remove('show');
-                });
-            }
-
             // Close search when clicking outside
             document.addEventListener('click', function(e) {
                 if (!searchContainer.contains(e.target) && !mobileSearchToggle.contains(e.target)) {
@@ -1324,38 +1361,61 @@
             });
         }
 
-        // Hamburger submenu functionality for mobile
+        // Hamburger submenu functionality
         const submenuToggle = document.querySelector('.dropdown-submenu .dropdown-toggle');
         const submenuMega = document.querySelector('.hamburger-products-mega');
+        const submenuParent = document.querySelector('.dropdown-submenu');
 
-        if (submenuToggle && submenuMega) {
+        if (submenuToggle && submenuMega && submenuParent) {
             submenuToggle.addEventListener('click', function(e) {
-                // Only handle clicks on mobile/tablet
-                if (window.innerWidth <= 768) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    
-                    const isVisible = submenuMega.style.display === 'block';
-                    
-                    if (isVisible) {
-                        submenuMega.style.display = 'none';
-                        submenuMega.style.opacity = '0';
+                e.preventDefault();
+                e.stopPropagation();
+                // Chỉ xử lý toggle trên mobile/tablet (max-width: 991px)
+                if (window.innerWidth <= 991) {
+                    if (submenuParent.classList.contains('active')) {
+                        submenuParent.classList.remove('active');
                     } else {
-                        submenuMega.style.display = 'block';
-                        submenuMega.style.opacity = '1';
+                        submenuParent.classList.add('active');
                     }
+                }
+            });
+            // Desktop hover giữ nguyên
+            submenuParent.addEventListener('mouseenter', function() {
+                if (window.innerWidth > 991) {
+                    this.classList.add('active');
+                }
+            });
+            submenuParent.addEventListener('mouseleave', function() {
+                if (window.innerWidth > 991) {
+                    this.classList.remove('active');
                 }
             });
         }
 
         // Close submenu when clicking outside
         document.addEventListener('click', function(e) {
-            if (window.innerWidth <= 768 && submenuMega) {
-                if (!e.target.closest('.dropdown-submenu')) {
-                    submenuMega.style.display = 'none';
-                    submenuMega.style.opacity = '0';
-                }
+            if (submenuParent && !e.target.closest('.dropdown-submenu')) {
+                submenuParent.classList.remove('active');
             }
+        });
+        
+        // Close hamburger menu when clicking on category links
+        const categoryLinks = document.querySelectorAll('.hamburger-category-links a, .hamburger-category-title a');
+        categoryLinks.forEach(link => {
+            link.addEventListener('click', function() {
+                // Close the hamburger dropdown
+                const hamburgerDropdown = document.querySelector('.hamburger-dropdown');
+                const hamburgerButton = document.querySelector('.hamburger-menu');
+                if (hamburgerDropdown && hamburgerButton) {
+                    hamburgerDropdown.classList.remove('show');
+                    hamburgerButton.setAttribute('aria-expanded', 'false');
+                }
+                
+                // Close the submenu
+                if (submenuParent) {
+                    submenuParent.classList.remove('active');
+                }
+            });
         });
     });
 </script>
