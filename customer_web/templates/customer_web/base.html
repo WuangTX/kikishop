@@ -95,8 +95,9 @@
                 background-color: #e55a8a;
                 border: none;
                 padding: 10px 15px;
-                border-radius: 8px;
+                border-radius: 50px;
                 color: white;
+                font-weight: bold;
                 font-size: 14px;
                 margin-right: 14px;
                 transition: all 0.3s ease;
@@ -154,13 +155,13 @@
             transition: all 0.3s ease;
             padding: 10px 20px;
             border-radius: 5px;
-            margin: 2px 5px;
+            margin: 0px -1px;
         }
         
         .dropdown-item:hover {
             background-color: rgba(255, 107, 157, 0.1);
             color: var(--primary-color);
-            transform: translateX(10px);
+            transform: translateX(-6px);
         }
         
         .dropdown-item i {
@@ -223,8 +224,6 @@
             top: 50px !important;
             min-width: 600px;
             background-color: white;
-            border: 2px solid var(--primary-color);
-            border-radius: 10px;
             box-shadow: 0 4px 15px rgba(0,0,0,0.1);
             padding: 20px;
             z-index: 1070 !important;
@@ -385,8 +384,8 @@
         
         @media (max-width: 576px) {
             .hamburger-menu {
-                padding: 8px 12px;
-                font-size: 12px;
+                padding: 4px 7px;
+                font-size: 14px;
             }
             .dropdown-menu[data-bs-popper] {
                 top: 115%;
@@ -409,7 +408,7 @@
                 top: 100% !important;
                 min-width: 320px;
                 max-width: calc(100vw - 10px);
-                padding: 10px;
+                padding: 0px;
                 transform: translateX(-50%) translateY(-5px) !important;
             }
             
@@ -502,9 +501,11 @@
         }
         
         .btn-primary {
-            background-color: var(--primary-color);
-            border-color: var(--primary-color);
-        }
+            background-color: #e55a8a;
+            border-color: #e55a8a;
+            --bs-btn-active-bg: #da487bff;
+            --bs-btn-active-border-color: #da487bff;
+        }   
         
         .btn-primary:hover {
             background-color: #e55a8a;
@@ -555,6 +556,19 @@
         .btn-outline-primary {
             transition: all 0.3s ease;
         }
+
+        .btn-outline-primary {
+            --bs-btn-hover-color: #fff;
+            --bs-btn-hover-bg: #e55a8a;
+            --bs-btn-focus-shadow-rgb: 13, 110, 253;
+            --bs-btn-active-bg: #e55a8a;
+            --bs-btn-active-border-color: #e55a8a;
+            --bs-btn-active-shadow: inset 0 3px 5px rgba(0, 0, 0, 0.125);
+            --bs-btn-disabled-color: #e55a8a;
+            --bs-btn-disabled-bg: transparent;
+            --bs-btn-disabled-border-color: #e55a8a;
+            --bs-gradient: none;
+        }
         
         .btn-outline-primary:hover {
             transform: scale(1.05);
@@ -590,10 +604,10 @@
             color: white;
             border-radius: 50%;
             padding: 2px 6px;
-            font-size: 0.6rem;
+            font-size: 0.5rem;
             position: absolute;
-            top: -6px;
-            right: -6px;
+            top: -9px;
+            right: 0px;
             transition: all 0.3s ease;
             z-index: 20 !important;
             pointer-events: none;
@@ -653,12 +667,31 @@
             top: 10%;
             right: -10%;
             animation-delay: 0s;
+            z-index: 1;
         }
-        
-        .floating-card-2 {
-            bottom: 20%;
-            left: -10%;
-            animation-delay: 1.5s;
+
+
+        @media (min-width: 768px) {
+            .floating-card-2 {
+                bottom: 20%;
+                left: -3%;
+                animation-delay: 1.5s;
+                z-index: 1;
+            }
+        }
+
+        @media (max-width: 576px) {
+            .floating-card-1 {
+                top: 81%;
+                right: 0%;
+                animation-delay: 0s;
+            }
+            
+            .floating-card-2 {
+                bottom: -26%; !important;
+                left: 0%; !important;
+                animation-delay: 1.5s;
+            }
         }
         
         
@@ -731,6 +764,22 @@
             }
         }
         
+        @keyframes shake-bell {
+            0% { transform: rotate(0deg); }
+            10% { transform: rotate(15deg); }
+            20% { transform: rotate(-15deg); }
+            30% { transform: rotate(10deg); }
+            40% { transform: rotate(-10deg); }
+            50% { transform: rotate(5deg); }
+            60% { transform: rotate(-5deg); }
+            70%, 100% { transform: rotate(0deg); }
+            }
+
+        .shake-bell {
+            animation: shake-bell 0.8s ease-in-out;
+            transform-origin: top center;
+        }   
+        
         @keyframes rotate {
             from {
                 transform: rotate(0deg);
@@ -781,9 +830,9 @@
         }
         
         .mobile-search-container {
-            background-color: white;
-            border-top: 2px solid var(--primary-color);
-            padding: 15px;
+            background-color: var(--primary-color);
+            border-top: 0px solid var(--primary-color);
+            padding: 5px;
             display: none;
             box-shadow: 0 4px 10px rgba(0,0,0,0.1);
             position: relative;
@@ -793,7 +842,11 @@
         
         .mobile-search-container.show {
             display: block !important;
-            animation: slideDown 0.3s ease;
+            animation: slideDown 0.5s ease;
+        }
+        .form-control:focus {
+            box-shadow: none;
+            border-color: #ff0000ff;
         }
         
         @keyframes slideDown {
@@ -1252,6 +1305,25 @@
         })
         .catch(() => showAlert('danger', 'Có lỗi xảy ra!'));
     }
+    window.addEventListener('pageshow', function (event) {
+        // Khi user quay lại trang bằng nút back, hoặc forward
+        if (event.persisted || (window.performance && window.performance.navigation.type === 2)) {
+            // Gọi AJAX để cập nhật icon giỏ hàng
+            fetchCartTotal();
+        }
+    });
+
+    // Hàm fetchCartTotal để lấy lại số lượng giỏ hàng
+    function fetchCartTotal() {
+        fetch('{% url "customer_web:get_cart_total" %}')
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    document.getElementById('cart-badge').textContent = data.cart_total;
+                }
+            });
+    }
+
 
     // Toggle Mobile Search Function
     function toggleMobileSearch() {
@@ -1420,6 +1492,14 @@
             });
         });
     });
+    const saleCard = document.querySelector('.floating-card-2');
+
+    setInterval(() => {
+        saleCard.classList.add('shake-bell');
+        setTimeout(() => {
+        saleCard.classList.remove('shake-bell');
+        }, 800); // bằng thời gian animation
+    }, 3000); // rung mỗi 3 giây
 </script>
 
 {% block extra_js %}{% endblock %}

@@ -14,6 +14,8 @@ urlpatterns = [
     path('cart/', views.cart_view, name='cart'),
     path('update-cart/', views.update_cart, name='update_cart'),
     path('remove-from-cart/', views.remove_from_cart, name='remove_from_cart'),
+    path('get-cart-total/', views.get_cart_total, name='get_cart_total'),
+
     
     # Product inventory API
     path('api/product/<int:product_id>/inventory/', views.get_product_inventory, name='get_product_inventory'),

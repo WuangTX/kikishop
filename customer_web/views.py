@@ -234,6 +234,17 @@ def add_to_cart(request):
     
     return JsonResponse({'success': False, 'message': 'Method not allowed'})
 
+
+@csrf_exempt
+def get_cart_total(request):
+    try:
+        cart = get_or_create_cart(request)
+        return JsonResponse({
+            'success': True,
+            'cart_total': cart.total_items
+        })
+    except Exception as e:
+        return JsonResponse({'success': False, 'message': str(e)})
 # Cart view
 def cart_view(request):
     cart = get_or_create_cart(request)

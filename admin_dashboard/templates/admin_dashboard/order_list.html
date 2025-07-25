@@ -68,7 +68,7 @@
             </thead>
             <tbody>
                 {% for order in page_obj %}
-                <tr style="border-bottom: 1px solid #f1f3f4;">
+                <tr style="border-bottom: 1px solid #f1f3f4;" onclick="window.location.href='{% url 'admin_dashboard:order_detail' order.id %}'" style="cursor: pointer;">
                     <td style="padding: 15px 12px; vertical-align: middle;">
                         <a href="{% url 'admin_dashboard:order_detail' order.id %}" class="text-decoration-none fw-semibold text-primary">
                             #{{ order.order_id.hex|slice:":8" }}
@@ -110,22 +110,6 @@
                             <a href="{% url 'admin_dashboard:order_detail' order.id %}" class="btn btn-sm btn-outline-primary" title="Xem chi tiết" style="padding: 6px 10px; border-radius: 6px;">
                                 <i class="fas fa-eye"></i>
                             </a>
-                            <div class="dropdown">
-                                <button class="btn btn-sm btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown" title="Cập nhật trạng thái" style="padding: 6px 10px; border-radius: 6px;">
-                                    <i class="fas fa-edit"></i>
-                                </button>
-                                <ul class="dropdown-menu dropdown-menu-end">
-                                    {% for status_key, status_label in status_choices %}
-                                        {% if status_key != order.status %}
-                                            <li>
-                                                <a class="dropdown-item" href="#" onclick="updateOrderStatus({{ order.id }}, '{{ status_key }}', '{{ status_label }}')">
-                                                    <span class="badge status-{{ status_key }} me-2">{{ status_label }}</span>
-                                                </a>
-                                            </li>
-                                        {% endif %}
-                                    {% endfor %}
-                                </ul>
-                            </div>
                         </div>
                     </td>
                 </tr>
@@ -280,14 +264,6 @@
     border-bottom: none;
 }
 
-.btn-group .btn {
-    margin-right: 2px;
-}
-
-.btn-group .btn:last-child {
-    margin-right: 0;
-}
-
 /* Tăng chiều cao cho table card và đảm bảo dropdown không bị khuất */
 .table-card {
     min-height: 600px;
@@ -371,7 +347,6 @@
     z-index: 1050 !important;
     min-width: 180px;
     padding: 8px 0;
-    margin-top: 4px;
 }
 
 .dropdown-menu.dropdown-menu-end {
@@ -425,24 +400,6 @@
 <script>
 function refreshOrders() {
     location.reload();
-}
-
-function updateOrderStatus(orderId, newStatus, newStatusLabel) {
-    if (confirm(`Bạn có chắc chắn muốn cập nhật trạng thái đơn hàng thành "${newStatusLabel}"?`)) {
-        // Create a form and submit
-        const form = document.createElement('form');
-        form.method = 'POST';
-        form.action = `/dashboard/orders/${orderId}/`;
-        
-        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
-        form.innerHTML = `
-            <input type="hidden" name="csrfmiddlewaretoken" value="${csrfToken}">
-            <input type="hidden" name="status" value="${newStatus}">
-        `;
-        
-        document.body.appendChild(form);
-        form.submit();
-    }
 }
 
 // Auto refresh every 30 seconds
