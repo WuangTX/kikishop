@@ -31,6 +31,12 @@
             background-color: #ff6b9d !important;
             padding: 0;
             min-height: auto;
+            transition: transform 0.3s ease-in-out;
+            will-change: transform;
+        }
+        
+        .navbar.nav-up {
+            transform: translateY(-100%);
         }
         
         .navbar .container {
@@ -832,21 +838,52 @@
         .mobile-search-container {
             background-color: var(--primary-color);
             border-top: 0px solid var(--primary-color);
-            padding: 5px;
+            padding: 10px 5px;
             display: none;
             box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-            position: relative;
-            z-index: 1050;
+            position: fixed;
+            top: 50px; /* Chiều cao của navbar */
+            left: 0;
+            right: 0;
+            z-index: 1000;
             width: 100%;
+            transition: transform 0.3s ease-in-out;
+            will-change: transform;
+        }
+        
+        .mobile-search-container.nav-up {
+            transform: translateY(-100%);
         }
         
         .mobile-search-container.show {
             display: block !important;
-            animation: slideDown 0.5s ease;
+            animation: slideDown 0.3s ease;
         }
+        
+        .mobile-search-container .form-control {
+            height: 40px;
+            border-radius: 4px 0 0 4px;
+            border: none;
+        }
+        
+        .mobile-search-container .btn {
+            border-radius: 0 4px 4px 0;
+        }
+        
+        /* Thêm padding-top cho main content để tránh bị che khi search hiển thị */
+        main {
+            padding-top: 60px;
+        }
+        
         .form-control:focus {
             box-shadow: none;
             border-color: #ff0000ff;
+        }
+
+        @media (min-width: 768px) {
+            .mobile-search-container {
+                top: 70px; /* Chiều cao của navbar */
+            }
         }
         
         @keyframes slideDown {
@@ -1112,7 +1149,7 @@
                 
                 <!-- Search -->
                 <form class="d-flex me-3 desktop-search" method="GET" action="{% url 'customer_web:product_list' %}">
-                    <input class="form-control me-2" type="search" name="search" placeholder="Nhập tên..." value="{{ request.GET.search }}">
+                    <input class="form-control me-2" type="search" name="search" placeholder="Nhập tên..." value="{{ request.GET.search }}"required>
                     <button class="btn btn-outline-primary" type="submit">
                         <i class="fas fa-search"></i>
                     </button>
@@ -1182,20 +1219,6 @@
         </div>
     </nav>
 
-    <!-- Mobile Search Container -->
-    <div class="mobile-search-container" id="mobileSearchContainer">
-        <div class="container">
-            <form method="GET" action="{% url 'customer_web:product_list' %}">
-                <div class="input-group">
-                    <input class="form-control" type="search" name="search" placeholder="Tìm kiếm sản phẩm..." value="{{ request.GET.search }}">
-                    <button class="btn btn-primary" type="submit">
-                        <i class="fas fa-search me-1"></i>
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
-
     <!-- Messages -->
     {% if messages %}
     <div class="container mt-3">
@@ -1209,6 +1232,20 @@
         {% endfor %}
     </div>
     {% endif %}
+
+    <!-- Mobile Search Container -->
+    <div class="mobile-search-container" id="mobileSearchContainer">
+        <div class="container">
+            <form method="GET" action="{% url 'customer_web:product_list' %}">
+                <div class="input-group">
+                    <input class="form-control" type="search" name="search" placeholder="Tìm kiếm sản phẩm..." value="{{ request.GET.search }}" required>
+                    <button class="btn btn-primary" type="submit">
+                        <i class="fas fa-search me-1"></i>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
 
     <!-- Main content -->
     <main>
@@ -1338,6 +1375,51 @@
                 if (input) setTimeout(() => input.focus(), 300);
             }
         }
+    }
+
+    let lastScrollTop = 0;
+    const navbar = document.querySelector('.navbar');
+    const mobileSearchContainer = document.getElementById('mobileSearchContainer');
+    const delta = 5;
+    let didScroll = false;
+
+    window.addEventListener('scroll', function() {
+        didScroll = true;
+    });
+
+    // Run hasScrolled() every 250ms
+    setInterval(function() {
+        if (didScroll) {
+            hasScrolled();
+            didScroll = false;
+        }
+    }, 250);
+
+    function hasScrolled() {
+        const st = window.pageYOffset || document.documentElement.scrollTop;
+        
+        // Make sure they scroll more than delta
+        if(Math.abs(lastScrollTop - st) <= delta)
+            return;
+        
+        // If they scrolled down and are past the navbar, add class nav-up
+        if (st > lastScrollTop && st > 50) {
+            // Scroll Down
+            navbar.classList.add('nav-up');
+            if (mobileSearchContainer && mobileSearchContainer.classList.contains('show')) {
+                mobileSearchContainer.classList.add('nav-up');
+            }
+        } else {
+            // Scroll Up
+            if(st + window.innerHeight < document.documentElement.scrollHeight) {
+                navbar.classList.remove('nav-up');
+                if (mobileSearchContainer && mobileSearchContainer.classList.contains('show')) {
+                    mobileSearchContainer.classList.remove('nav-up');
+                }
+            }
+        }
+        
+        lastScrollTop = st;
     }
 
     document.addEventListener('DOMContentLoaded', function () {
