@@ -15,18 +15,21 @@
                 <div class="card-body">
                     <!-- Categories -->
                     <h6>Danh mục</h6>
-                    <div class="mb-3">
-                        <a href="{% url 'customer_web:product_list' %}" 
-                           class="btn btn-outline-secondary btn-sm mb-2 {% if not current_category %}active{% endif %}">
-                           Tất cả
-                        </a>
+                    <div class="mb-3" id="category-filters">
+                        <button type="button"
+                            class="btn btn-outline-secondary btn-sm mb-2 {% if not selected_categories %}active{% endif %}"
+                            data-slug="all">
+                            Tất cả
+                        </button>
                         {% for category in categories %}
-                        <a href="{% url 'customer_web:product_list' %}?category={{ category.slug }}" 
-                           class="btn btn-outline-secondary btn-sm mb-2 {% if current_category == category.slug %}active{% endif %}">
-                           {{ category.name }}
-                        </a>
+                        <button type="button"
+                            class="btn btn-outline-secondary btn-sm mb-2 {% if category.slug in selected_categories %}active{% endif %}"
+                            data-slug="{{ category.slug }}">
+                            {{ category.name }}
+                        </button>
                         {% endfor %}
                     </div>
+
                     
                     <!-- Sort -->
                     <h6>Sắp xếp</h6>
@@ -125,7 +128,7 @@
                 <ul class="pagination justify-content-center">
                     {% if products.has_previous %}
                     <li class="page-item">
-                        <a class="page-link" href="?{% if current_category %}category={{ current_category }}&{% endif %}{% if search_query %}search={{ search_query }}&{% endif %}{% if sort_by %}sort={{ sort_by }}&{% endif %}page={{ products.previous_page_number }}">
+                        <a class="page-link" href="?{% if selected_categories %}categories={{ selected_categories|join:',' }}&{% endif %}{% if search_query %}search={{ search_query }}&{% endif %}{% if sort_by %}sort={{ sort_by }}&{% endif %}page={{ products.previous_page_number }}">
                             <i class="fas fa-chevron-left"></i> Trước
                         </a>
                     </li>
@@ -138,14 +141,14 @@
                     </li>
                     {% elif num > products.number|add:'-3' and num < products.number|add:'3' %}
                     <li class="page-item">
-                        <a class="page-link" href="?{% if current_category %}category={{ current_category }}&{% endif %}{% if search_query %}search={{ search_query }}&{% endif %}{% if sort_by %}sort={{ sort_by }}&{% endif %}page={{ num }}">{{ num }}</a>
+                        <a class="page-link" href="?{% if selected_categories %}categories={{ selected_categories|join:',' }}&{% endif %}{% if search_query %}search={{ search_query }}&{% endif %}{% if sort_by %}sort={{ sort_by }}&{% endif %}page={{ num }}">{{ num }}</a>
                     </li>
                     {% endif %}
                     {% endfor %}
                     
                     {% if products.has_next %}
                     <li class="page-item">
-                        <a class="page-link" href="?{% if current_category %}category={{ current_category }}&{% endif %}{% if search_query %}search={{ search_query }}&{% endif %}{% if sort_by %}sort={{ sort_by }}&{% endif %}page={{ products.next_page_number }}">
+                        <a class="page-link" href="?{% if selected_categories %}categories={{ selected_categories|join:',' }}&{% endif %}{% if search_query %}search={{ search_query }}&{% endif %}{% if sort_by %}sort={{ sort_by }}&{% endif %}page={{ products.next_page_number }}">
                             Sau <i class="fas fa-chevron-right"></i>
                         </a>
                     </li>
@@ -165,5 +168,39 @@ function updateSort(sortBy) {
     urlParams.set('sort', sortBy);
     window.location.search = urlParams.toString();
 }
+
+document.addEventListener('DOMContentLoaded', function () {
+    const buttons = document.querySelectorAll('#category-filters button');
+    let selected = new Set({{ selected_categories|safe }}); // truyền selected từ server vào JS nếu có
+
+    buttons.forEach(button => {
+        button.addEventListener('click', function () {
+            const slug = this.dataset.slug;
+
+            if (slug === "all") {
+                // Chọn "Tất cả" -> bỏ hết lựa chọn
+                selected.clear();
+            } else {
+                if (selected.has(slug)) {
+                    selected.delete(slug);
+                } else {
+                    selected.add(slug);
+                }
+            }
+
+            // Cập nhật URL query string
+            const queryParams = new URLSearchParams(window.location.search);
+            if (selected.size > 0) {
+                queryParams.set('categories', Array.from(selected).join(','));
+            } else {
+                queryParams.delete('categories');
+            }
+
+            // Reload trang với query mới
+            window.location.search = queryParams.toString();
+        });
+    });
+});
+
 </script>
 {% endblock %}

@@ -198,8 +198,9 @@ def product_list(request):
             Q(name__icontains=query) | Q(description__icontains=query)
         )
     
-    if category_id:
-        products = products.filter(category_id=category_id)
+    if category_id.isdigit():
+        products = products.filter(categories__id=int(category_id))
+
     
     categories = Category.objects.all()
     
@@ -224,7 +225,7 @@ def product_add(request):
             # Lấy dữ liệu từ form
             name = request.POST.get('name')
             slug = slugify(name)
-            category_id = request.POST.get('category')
+            category = request.POST.getlist('categories')
             description = request.POST.get('description')
             price = request.POST.get('price')
             discount_price = request.POST.get('discount_price')
@@ -238,7 +239,6 @@ def product_add(request):
             product = Product.objects.create(
                 name=name,
                 slug=slug,
-                category_id=category_id,
                 description=description,
                 price=price,
                 discount_price=discount_price if discount_price else None,
@@ -248,7 +248,9 @@ def product_add(request):
                 is_featured=is_featured,
                 is_hot_trend=is_hot_trend
             )
-            
+            # Xử lý nhiều danh mục
+            product.categories.set(category)
+
             # Xử lý inventory data (nếu có)
             process_inventory_data(request, product)
             
@@ -277,7 +279,11 @@ def product_edit(request, product_id):
         try:
             product.name = request.POST.get('name')
             product.slug = slugify(product.name)
-            product.category_id = request.POST.get('category')
+            # Xử lý nhiều danh mục
+            category_ids = request.POST.getlist('categories')
+            product.categories.clear()  # Xóa các danh mục cũ
+            product.categories.add(*category_ids)  # Thêm các danh mục mới
+            
             product.description = request.POST.get('description')
             product.price = request.POST.get('price')
             product.discount_price = request.POST.get('discount_price') or None
@@ -301,9 +307,13 @@ def product_edit(request, product_id):
             messages.error(request, f'Lỗi khi cập nhật sản phẩm: {str(e)}')
     
     categories = Category.objects.all()
+    # Lấy danh sách id của các danh mục hiện tại của sản phẩm
+    product_category_ids = list(product.categories.values_list('id', flat=True))
+    
     return render(request, 'admin_dashboard/product_form.html', {
         'product': product,
         'categories': categories,
+        'product_category_ids': product_category_ids,
         'action': 'edit'
     })
 

@@ -665,7 +665,7 @@
         }    
         
         
-        .floating-card {
+        .floating-card-1 {
             animation: floating 3s ease-in-out infinite;
         }
         
@@ -675,27 +675,35 @@
             animation-delay: 0s;
             z-index: 1;
         }
-
-
-        @media (min-width: 768px) {
-            .floating-card-2 {
-                bottom: 20%;
-                left: -3%;
+        @media (min-width: 992px) {
+            .floating-card-1 {
+                width : 150px;
+                height: 110px;
+                bottom: -20%;
+                left: 85%;
                 animation-delay: 1.5s;
                 z-index: 1;
             }
         }
 
+        @media (min-width: 992px) {
+            .floating-card-2 {
+                bottom: -27%;
+                left: 35%;
+                animation-delay: 1.5s;
+                z-index: 1;
+
+            }
+        }
+
         @media (max-width: 576px) {
             .floating-card-1 {
-                top: 81%;
-                right: 0%;
-                animation-delay: 0s;
+                opacity: 0;
             }
             
             .floating-card-2 {
-                bottom: -26%; !important;
-                left: 0%; !important;
+                bottom: -34%; !important;
+                left: 75%; !important;
                 animation-delay: 1.5s;
             }
         }
@@ -981,15 +989,15 @@
                                     <div class="col-6 col-md-3">
                                         <div class="hamburger-category-section">
                                             <h6 class="hamburger-category-title">
-                                                <a href="{% url 'customer_web:product_list' %}?category=quan-ao-be-gai">
+                                                <a href="{% url 'customer_web:product_list' %}?categories=quan-ao-be-gai">
                                                     <i class="fas fa-female me-2"></i>Quần áo bé gái
                                                 </a>
                                             </h6>
                                             <div class="hamburger-category-links">
-                                                <a href="{% url 'customer_web:product_list' %}?category=do-bo-be-gai">Đồ bộ bé gái</a>
-                                                <a href="{% url 'customer_web:product_list' %}?category=vay-dam-be-gai">Váy đầm bé gái</a>
-                                                <a href="{% url 'customer_web:product_list' %}?category=ao-be-gai">Áo bé gái</a>
-                                                <a href="{% url 'customer_web:product_list' %}?category=quan-be-gai">Quần bé gái</a>
+                                                <a href="{% url 'customer_web:product_list' %}?categories=do-bo-be-gai">Đồ bộ bé gái</a>
+                                                <a href="{% url 'customer_web:product_list' %}?categories=vay-dam-be-gai">Váy đầm bé gái</a>
+                                                <a href="{% url 'customer_web:product_list' %}?categories=ao-be-gai">Áo bé gái</a>
+                                                <a href="{% url 'customer_web:product_list' %}?categories=quan-be-gai">Quần bé gái</a>
                                             </div>
                                         </div>
                                     </div>
@@ -998,15 +1006,15 @@
                                     <div class="col-6 col-md-3">
                                         <div class="hamburger-category-section">
                                             <h6 class="hamburger-category-title">
-                                                <a href="{% url 'customer_web:product_list' %}?category=quan-ao-be-trai">
+                                                <a href="{% url 'customer_web:product_list' %}?categories=quan-ao-be-trai">
                                                     <i class="fas fa-male me-2"></i>Quần áo bé trai
                                                 </a>
                                             </h6>
                                             <div class="hamburger-category-links">
-                                                <a href="{% url 'customer_web:product_list' %}?category=do-bo-be-trai">Đồ bộ bé trai</a>
-                                                <a href="{% url 'customer_web:product_list' %}?category=ao-be-trai">Áo bé trai</a>
-                                                <a href="{% url 'customer_web:product_list' %}?category=quan-be-trai">Quần bé trai</a>
-                                                <a href="{% url 'customer_web:product_list' %}?category=do-boi-be-trai">Đồ bơi bé trai</a>
+                                                <a href="{% url 'customer_web:product_list' %}?categories=do-bo-be-trai">Đồ bộ bé trai</a>
+                                                <a href="{% url 'customer_web:product_list' %}?categories=ao-be-trai">Áo bé trai</a>
+                                                <a href="{% url 'customer_web:product_list' %}?categories=quan-be-trai">Quần bé trai</a>
+                                                <a href="{% url 'customer_web:product_list' %}?categories=do-boi-be-trai">Đồ bơi bé trai</a>
                                             </div>
                                         </div>
                                     </div>
@@ -1015,15 +1023,15 @@
                                     <div class="col-6 col-md-3">
                                         <div class="hamburger-category-section">
                                             <h6 class="hamburger-category-title">
-                                                <a href="{% url 'customer_web:product_list' %}?category=phu-kien">
+                                                <a href="{% url 'customer_web:product_list' %}?categories=phu-kien">
                                                     <i class="fas fa-gem me-2"></i>Phụ kiện
                                                 </a>
                                             </h6>
                                             <div class="hamburger-category-links">
-                                                <a href="{% url 'customer_web:product_list' %}?category=giay-dep-be-gai">Giày dép bé gái</a>
-                                                <a href="{% url 'customer_web:product_list' %}?category=giay-dep-cho-be-trai">Giày dép bé trai</a>
-                                                <a href="{% url 'customer_web:product_list' %}?category=non-mu-cho-be">Nón mũ cho bé</a>
-                                                <a href="{% url 'customer_web:product_list' %}?category=ba-lo-tui-deo">Ba lô túi đeo</a>
+                                                <a href="{% url 'customer_web:product_list' %}?categories=giay-dep-be-gai">Giày dép bé gái</a>
+                                                <a href="{% url 'customer_web:product_list' %}?categories=giay-dep-cho-be-trai">Giày dép bé trai</a>
+                                                <a href="{% url 'customer_web:product_list' %}?categories=non-mu-cho-be">Nón mũ cho bé</a>
+                                                <a href="{% url 'customer_web:product_list' %}?categories=ba-lo-tui-deo">Ba lô túi đeo</a>
                                             </div>
                                         </div>
                                     </div>
@@ -1032,14 +1040,14 @@
                                     <div class="col-6 col-md-3">
                                         <div class="hamburger-category-section">
                                             <h6 class="hamburger-category-title">
-                                                <a href="{% url 'customer_web:product_list' %}?category=quan-ao-so-sinh">
+                                                <a href="{% url 'customer_web:product_list' %}?categories=quan-ao-so-sinh">
                                                     <i class="fas fa-baby me-2"></i>Quần áo sơ sinh
                                                 </a>
                                             </h6>
                                             <div class="hamburger-category-links">
-                                                <a href="{% url 'customer_web:product_list' %}?category=body-ao-lien-quan">Body áo liền quần</a>
-                                                <a href="{% url 'customer_web:product_list' %}?category=do-bo-so-sinh">Đồ bộ sơ sinh</a>
-                                                <a href="{% url 'customer_web:product_list' %}?category=ao-so-sinh">Phụ kiện sơ sinh</a>
+                                                <a href="{% url 'customer_web:product_list' %}?categories=body-ao-lien-quan">Body áo liền quần</a>
+                                                <a href="{% url 'customer_web:product_list' %}?categories=do-bo-so-sinh">Đồ bộ sơ sinh</a>
+                                                <a href="{% url 'customer_web:product_list' %}?categories=ao-so-sinh">Phụ kiện sơ sinh</a>
                                             </div>
                                         </div>
                                     </div>
@@ -1071,16 +1079,16 @@
                             Quần áo bé gái
                         </a>
                         <ul class="dropdown-menu">
-                            <li><a class="dropdown-item" href="{% url 'customer_web:product_list' %}?category=do-bo-be-gai">
+                            <li><a class="dropdown-item" href="{% url 'customer_web:product_list' %}?categories=do-bo-be-gai">
                                 <i class="fas fa-tshirt me-2"></i>Đồ bộ bé gái
                             </a></li>
-                            <li><a class="dropdown-item" href="{% url 'customer_web:product_list' %}?category=vay-dam-be-gai">
+                            <li><a class="dropdown-item" href="{% url 'customer_web:product_list' %}?categories=vay-dam-be-gai">
                                 <i class="fas fa-dress me-2"></i>Váy đầm bé gái
                             </a></li>
-                            <li><a class="dropdown-item" href="{% url 'customer_web:product_list' %}?category=ao-be-gai">
+                            <li><a class="dropdown-item" href="{% url 'customer_web:product_list' %}?categories=ao-be-gai">
                                 <i class="fas fa-baby me-2"></i>Áo bé gái
                             </a></li>
-                            <li><a class="dropdown-item" href="{% url 'customer_web:product_list' %}?category=quan-be-gai">
+                            <li><a class="dropdown-item" href="{% url 'customer_web:product_list' %}?categories=quan-be-gai">
                                 <i class="fas fa-child me-2"></i>Quần bé gái
                             </a></li>
                         </ul>
@@ -1092,16 +1100,16 @@
                             Quần áo bé trai
                         </a>
                         <ul class="dropdown-menu">
-                            <li><a class="dropdown-item" href="{% url 'customer_web:product_list' %}?category=do-bo-be-trai">
+                            <li><a class="dropdown-item" href="{% url 'customer_web:product_list' %}?categories=do-bo-be-trai">
                                 <i class="fas fa-tshirt me-2"></i>Đồ bộ bé trai
                             </a></li>
-                            <li><a class="dropdown-item" href="{% url 'customer_web:product_list' %}?category=ao-be-trai">
+                            <li><a class="dropdown-item" href="{% url 'customer_web:product_list' %}?categories=ao-be-trai">
                                 <i class="fas fa-baby me-2"></i>Áo bé trai
                             </a></li>
-                            <li><a class="dropdown-item" href="{% url 'customer_web:product_list' %}?category=quan-be-trai">
+                            <li><a class="dropdown-item" href="{% url 'customer_web:product_list' %}?categories=quan-be-trai">
                                 <i class="fas fa-child me-2"></i>Quần bé trai
                             </a></li>
-                            <li><a class="dropdown-item" href="{% url 'customer_web:product_list' %}?category=do-boi-be-trai">
+                            <li><a class="dropdown-item" href="{% url 'customer_web:product_list' %}?categories=do-boi-be-trai">
                                 <i class="fas fa-swimmer me-2"></i>Đồ bơi bé trai
                             </a></li>
                         </ul>
@@ -1113,16 +1121,16 @@
                             Phụ kiện
                         </a>
                         <ul class="dropdown-menu">
-                            <li><a class="dropdown-item" href="{% url 'customer_web:product_list' %}?category=giay-dep-be-gai">
+                            <li><a class="dropdown-item" href="{% url 'customer_web:product_list' %}?categories=giay-dep-be-gai">
                                 <i class="fas fa-shoe-prints me-2"></i>Giày dép bé gái
                             </a></li>
-                            <li><a class="dropdown-item" href="{% url 'customer_web:product_list' %}?category=giay-dep-cho-be-trai">
+                            <li><a class="dropdown-item" href="{% url 'customer_web:product_list' %}?categories=giay-dep-cho-be-trai">
                                 <i class="fas fa-shoe-prints me-2"></i>Giày dép bé trai
                             </a></li>
-                            <li><a class="dropdown-item" href="{% url 'customer_web:product_list' %}?category=non-mu-cho-be">
+                            <li><a class="dropdown-item" href="{% url 'customer_web:product_list' %}?categories=non-mu-cho-be">
                                 <i class="fas fa-hat-cowboy me-2"></i>Nón mũ cho bé
                             </a></li>
-                            <li><a class="dropdown-item" href="{% url 'customer_web:product_list' %}?category=ba-lo-tui-deo">
+                            <li><a class="dropdown-item" href="{% url 'customer_web:product_list' %}?categories=ba-lo-tui-deo">
                                 <i class="fas fa-backpack me-2"></i>Ba lô túi đeo
                             </a></li>
                         </ul>
@@ -1134,13 +1142,13 @@
                             Quần áo sơ sinh
                         </a>
                         <ul class="dropdown-menu">
-                            <li><a class="dropdown-item" href="{% url 'customer_web:product_list' %}?category=body-ao-lien-quan">
+                            <li><a class="dropdown-item" href="{% url 'customer_web:product_list' %}?categories=body-ao-lien-quan">
                                 <i class="fas fa-baby me-2"></i>Body áo liền quần
                             </a></li>
-                            <li><a class="dropdown-item" href="{% url 'customer_web:product_list' %}?category=do-bo-so-sinh">
+                            <li><a class="dropdown-item" href="{% url 'customer_web:product_list' %}?categories=do-bo-so-sinh">
                                 <i class="fas fa-baby me-2"></i>Đồ bộ sơ sinh
                             </a></li>
-                            <li><a class="dropdown-item" href="{% url 'customer_web:product_list' %}?category=ao-so-sinh">
+                            <li><a class="dropdown-item" href="{% url 'customer_web:product_list' %}?categories=ao-so-sinh">
                                 <i class="fas fa-baby-carriage me-2"></i>Phụ kiện sơ sinh
                             </a></li>
                         </ul>

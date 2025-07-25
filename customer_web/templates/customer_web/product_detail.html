@@ -177,7 +177,11 @@
                 <div class="product-details mt-4">
                     <h6>Thông tin chi tiết:</h6>
                     <ul class="list-unstyled">
-                        <li><strong>Danh mục:</strong> {{ product.category.name }}</li>
+                        <li><strong>Danh mục:</strong> 
+                            {% for category in product.categories.all %}
+                                {{ category.name }}{% if not forloop.last %}, {% endif %}
+                            {% endfor %}
+                        </li>
                         {% if product.sizes %}<li><strong>Size:</strong> {{ product.sizes }}</li>{% endif %}
                         {% if product.colors %}<li><strong>Màu sắc:</strong> {{ product.colors }}</li>{% endif %}
                         <li><strong>Mã sản phẩm:</strong> #{{ product.id }}</li>

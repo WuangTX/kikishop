@@ -47,11 +47,14 @@ def product_list(request):
     products = Product.objects.filter(is_active=True)
     categories = Category.objects.filter(is_active=True)
     
-    # Filter by category
-    category_slug = request.GET.get('category')
-    if category_slug:
-        category = get_object_or_404(Category, slug=category_slug)
-        products = products.filter(category=category)
+    # Filter by categories
+    category_slugs = request.GET.get('categories', '')
+    selected_categories = []
+    if category_slugs:
+        for slug in category_slugs.split(','):
+            category = get_object_or_404(Category, slug=slug)
+            products = products.filter(categories=category)
+            selected_categories.append(slug)
     
     # Search
     search_query = request.GET.get('search')
@@ -82,7 +85,7 @@ def product_list(request):
     context = {
         'products': page_obj,
         'categories': categories,
-        'current_category': category_slug,
+        'selected_categories': selected_categories,
         'search_query': search_query,
         'sort_by': sort_by,
     }

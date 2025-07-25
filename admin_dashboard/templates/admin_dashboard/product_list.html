@@ -12,7 +12,7 @@
                 <input type="search" name="q" class="form-control" placeholder="Tìm kiếm sản phẩm..." value="{{ query }}">
             </div>
             <div class="flex-shrink-0">
-                <select name="category" class="form-select">
+                <select name="category" class="form-select" onchange="this.form.submit()">
                     <option value="">Tất cả danh mục</option>
                     {% for category in categories %}
                         <option value="{{ category.id }}" {% if category.id|stringformat:'s' == selected_category %}selected{% endif %}>
@@ -77,7 +77,14 @@
                             <span class="badge bg-danger ms-1">🔥 Hot Trend</span>
                         {% endif %}
                     </td>
-                    <td>{{ product.category.name }}</td>
+                    <td>
+                        {% if product.categories.exists %}
+                            {% for category in product.categories.all %}
+                                <span class="badge bg-secondary">{{ category.name }}</span>
+                            {% endfor %}
+                        {% else %}
+                            <span class="text-muted">Chưa có danh mục</span>
+                        {% endif %}
                     <td>
                         {% if product.discount_price %}
                             <div class="text-decoration-line-through text-muted small">{{ product.price|floatformat:0 }}₫</div>
