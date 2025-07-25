@@ -503,6 +503,17 @@
     transform: translateY(-2px);
 }
 
+@media(max-width: 576px){
+    .hero-img {
+        border-radius: 20px;
+        transform: rotate(0deg);
+        transition: transform 0.3s ease;
+        max-height: 600px;
+        width: 100%;
+        object-fit: cover;
+}
+}
+
 .floating-card {
     pointer-events: none !important;
 }
