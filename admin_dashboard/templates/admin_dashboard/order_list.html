@@ -12,7 +12,7 @@
                 <input type="search" name="q" class="form-control" placeholder="Tìm kiếm theo tên, email, số điện thoại..." value="{{ query }}">
             </div>
             <div class="flex-shrink-0">
-                <select name="status" class="form-select">
+                <select name="status" class="form-select" onchange="this.form.submit()">
                     <option value="">Tất cả trạng thái</option>
                     {% for status_key, status_label in status_choices %}
                         <option value="{{ status_key }}" {% if status_key == selected_status %}selected{% endif %}>

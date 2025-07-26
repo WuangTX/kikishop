@@ -51,11 +51,11 @@ def product_list(request):
     category_slugs = request.GET.get('categories', '')
     selected_categories = []
     if category_slugs:
+        q = Q()
         for slug in category_slugs.split(','):
-            category = get_object_or_404(Category, slug=slug)
-            products = products.filter(categories=category)
             selected_categories.append(slug)
-    
+            q |= Q(categories__slug=slug)  # dùng toán tử OR
+        products = products.filter(q).distinct()
     # Search
     search_query = request.GET.get('search')
     if search_query:
