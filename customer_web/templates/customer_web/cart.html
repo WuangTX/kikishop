@@ -13,35 +13,39 @@
             
             {% if cart.items.all %}
             <div class="row">
-                <div class="col-lg-8">
+                <div class="col-lg-9">
                     <div class="card">
                         <div class="card-body">
                             {% for item in cart.items.all %}
                             <div class="row align-items-center border-bottom py-3" id="cart-item-{{ item.id }}">
-                                <div class="col-md-2">
+                                <div class="col-md-2 col-custom-12">
                                     {% with item.product.images.first as primary_image %}
                                     {% if primary_image %}
-                                    <img src="{{ primary_image.image.url }}" class="img-fluid rounded" 
-                                         alt="{{ item.product.name }}" style="height: 80px; object-fit: cover;">
+                                    <a href="{% url 'customer_web:product_detail' item.product.slug %}">
+                                        <img src="{{ primary_image.image.url }}" class="img-fluid rounded" 
+                                             alt="{{ item.product.name }}" style="height: 50px; object-fit: cover;">
+                                    </a>
                                     {% else %}
-                                    <div class="bg-light rounded d-flex align-items-center justify-content-center" style="height: 80px;">
-                                        <i class="fas fa-image text-muted"></i>
-                                    </div>
+                                    <a href="{% url 'customer_web:product_detail' item.product.slug %}">
+                                        <div class="bg-light rounded d-flex align-items-center justify-content-center" style="height: 50px;">
+                                            <i class="fas fa-image text-muted"></i>
+                                        </div>
+                                    </a>
                                     {% endif %}
                                     {% endwith %}
                                 </div>
                                 
-                                <div class="col-md-4">
-                                    <h6>{{ item.product.name }}</h6>
+                                <div class="col-md-4 col-custom-14">
+                                    <h6><a href="{% url 'customer_web:product_detail' item.product.slug %}" class="text-decoration-none">{{ item.product.name }}</a></h6>
                                     {% if item.size %}<small class="text-muted">Size: {{ item.size }}</small><br>{% endif %}
                                     {% if item.color %}<small class="text-muted">Màu: {{ item.color }}</small>{% endif %}
                                 </div>
                                 
-                                <div class="col-md-2">
+                                <div class="col-md-2 col-custom-15">
                                     <span class="fw-bold">{{ item.product.get_price|currency_vnd }}</span>
                                 </div>
                                 
-                                <div class="col-md-2">
+                                <div class="col-md-2 col-custom-13">
                                 <div class="input-group">
                                     <button class="btn btn-outline-secondary btn-sm" type="button" 
                                             onclick="updateQuantity({{ item.id }}, parseInt(document.getElementById('qty-{{ item.id }}').value) - 1)">-</button>
@@ -53,13 +57,7 @@
                                     </div>
                                 </div>
                                 
-                                <div class="col-md-1">
-                                    <span class="fw-bold" id="item-total-{{ item.id }}">
-                                        {{ item.total_price|currency_vnd }}
-                                    </span>
-                                </div>
-                                
-                                <div class="col-md-1">
+                                <div class="col-md-1 col-custom-16">
                                     <button class="btn btn-outline-danger btn-sm" 
                                             onclick="removeFromCart({{ item.id }})">
                                         <i class="fas fa-trash"></i>
@@ -71,10 +69,10 @@
                     </div>
                 </div>
                 
-                <div class="col-lg-4">
+                <div class="col-lg-3">
                     <div class="card">
                         <div class="card-header">
-                            <h5 class="mb-0">Tổng cong đơn hàng</h5>
+                            <h5 class="mb-0">Tổng cộng đơn hàng</h5>
                         </div>
                         <div class="card-body">
                             <div class="d-flex justify-content-between mb-2">
@@ -164,7 +162,6 @@ function updateQuantity(itemId, quantity) {
             // Update item total
             const itemPrice = parseFloat(document.querySelector('#cart-item-' + itemId + ' .fw-bold').textContent.replace('₫', '').replace(',', ''));
             const itemTotal = itemPrice * quantity;
-            document.getElementById('item-total-' + itemId).textContent = itemTotal.toLocaleString() + '₫';
         } else {
             showAlert('danger', data.message);
         }

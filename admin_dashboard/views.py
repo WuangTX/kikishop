@@ -1,4 +1,5 @@
 from django.shortcuts import render, get_object_or_404, redirect
+from django.template.loader import render_to_string
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib import messages
 from django.http import JsonResponse
@@ -17,6 +18,77 @@ import json
 # Check if user is admin/staff
 def is_admin(user):
     return user.is_authenticated and (user.is_staff or user.is_superuser)
+
+def update_inventory_on_status_change(order, old_status, new_status):
+    """Tự động cập nhật tồn kho ProductInventory khi trạng thái đơn hàng thay đổi"""
+    try:
+        # Khi đơn hàng bị hủy - khôi phục lại tồn kho
+        if new_status == 'cancelled' and old_status in ['pending', 'confirmed', 'processing']:
+            for item in order.items.all():
+                try:
+                    inventory = ProductInventory.objects.get(
+                        product=item.product,
+                        size=item.size,
+                        color=item.color
+                    )
+                    inventory.quantity += item.quantity
+                    inventory.save()
+                except ProductInventory.DoesNotExist:
+                    # Tạo mới inventory nếu chưa có
+                    sku = generate_unique_sku(item.product, item.color, item.size)
+                    ProductInventory.objects.create(
+                        product=item.product,
+                        size=item.size,
+                        color=item.color,
+                        quantity=item.quantity,
+                        sku=sku
+                    )
+        
+        # Khi đơn hàng được hoàn trả hoàn tất - khôi phục lại tồn kho
+        elif new_status == 'returned' and old_status in ['return_requested', 'return_approved']:
+            for item in order.items.all():
+                try:
+                    inventory = ProductInventory.objects.get(
+                        product=item.product,
+                        size=item.size,
+                        color=item.color
+                    )
+                    inventory.quantity += item.quantity
+                    inventory.save()
+                except ProductInventory.DoesNotExist:
+                    # Tạo mới inventory nếu chưa có
+                    sku = generate_unique_sku(item.product, item.color, item.size)
+                    ProductInventory.objects.create(
+                        product=item.product,
+                        size=item.size,
+                        color=item.color,
+                        quantity=item.quantity,
+                        sku=sku
+                    )
+        
+        # Khi đơn hàng được xác nhận/xử lý lần đầu - trừ tồn kho ProductInventory
+        elif new_status in ['confirmed', 'processing'] and old_status == 'pending':
+            for item in order.items.all():
+                try:
+                    inventory = ProductInventory.objects.get(
+                        product=item.product,
+                        size=item.size,
+                        color=item.color
+                    )
+                    # Chỉ trừ nếu còn đủ hàng
+                    if inventory.quantity >= item.quantity:
+                        inventory.quantity -= item.quantity
+                        inventory.save()
+                    else:
+                        # Log warning but don't block the status change
+                        print(f"Warning: Not enough inventory for {item.product.name} - {item.size} - {item.color}")
+                except ProductInventory.DoesNotExist:
+                    # Log warning but don't block the status change
+                    print(f"Warning: No inventory found for {item.product.name} - {item.size} - {item.color}")
+    
+    except Exception as e:
+        print(f"Error updating inventory: {str(e)}")
+        # Don't block status change due to inventory errors
 
 def generate_unique_sku(product, color, size):
     """Generate unique SKU for inventory item"""
@@ -499,6 +571,9 @@ def order_detail(request, order_id):
                 old_status = order.status
                 order.status = new_status
                 
+                # Auto-update inventory based on status change
+                update_inventory_on_status_change(order, old_status, new_status)
+                
                 # Cập nhật thông tin hoàn trả tự động
                 if new_status == 'return_requested' and old_status != 'return_requested':
                     order.return_requested_at = timezone.now()
@@ -594,6 +669,7 @@ def bulk_order_action(request):
 def inventory_list(request):
     """Danh sách tồn kho sản phẩm"""
     query = request.GET.get('q', '')
+    category_id = request.GET.get('category', '')   
     product_id = request.GET.get('product', '')
     size = request.GET.get('size', '')
     color = request.GET.get('color', '')
@@ -609,6 +685,9 @@ def inventory_list(request):
     if product_id:
         inventory = inventory.filter(product_id=product_id)
     
+    if category_id.isdigit():
+        inventory = inventory.filter(product__categories__id=int(category_id))
+
     if size:
         inventory = inventory.filter(size=size)
     
@@ -625,6 +704,7 @@ def inventory_list(request):
     paginator = Paginator(inventory, 20)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
+    categories = Category.objects.all()
     
     # Get filter options
     products = Product.objects.filter(is_active=True).order_by('name')
@@ -639,6 +719,7 @@ def inventory_list(request):
         'selected_color': color,
         'selected_stock_status': stock_status,
         'products': products,
+        'categories': categories,
         'sizes': sizes,
         'colors': colors,
     }
@@ -646,24 +727,111 @@ def inventory_list(request):
 
 @login_required
 @user_passes_test(is_admin)
-def inventory_add(request):
-    """Thêm tồn kho mới"""
-    if request.method == 'POST':
-        form = ProductInventoryForm(request.POST)
-        if form.is_valid():
-            inventory = form.save()
-            messages.success(request, f'Đã thêm tồn kho cho {inventory.product.name} - {inventory.get_color_display()} - {inventory.size}')
-            return redirect('admin_dashboard:inventory_list')
-        else:
-            messages.error(request, 'Có lỗi trong form. Vui lòng kiểm tra lại.')
-    else:
-        form = ProductInventoryForm()
+def get_products_by_category(request):
+    """API endpoint để lấy sản phẩm theo danh mục"""
+    category_id = request.GET.get('category_id') or request.GET.get('category')  # hỗ trợ cả `category`
+    products = []
     
-    context = {
-        'form': form,
-        'action': 'add',
-    }
-    return render(request, 'admin_dashboard/inventory_form.html', context)
+    if category_id:
+        try:
+            category = Category.objects.get(id=category_id)
+            products = list(Product.objects.filter(categories=category).values('id', 'name'))
+        except Category.DoesNotExist:
+            return JsonResponse({'error': 'Danh mục không tồn tại'}, status=404)
+    else:
+        products = list(Product.objects.all().values('id', 'name'))
+
+    return JsonResponse({'products': products})
+@login_required
+@user_passes_test(is_admin)
+def get_product_variants(request):
+    """API endpoint để lấy size và màu sắc của sản phẩm"""
+    product_id = request.GET.get('product_id') or request.GET.get('product')  # hỗ trợ cả tham số
+    if not product_id:
+        return JsonResponse({'sizes': [], 'colors': []})
+    
+    try:
+        product = get_object_or_404(Product, id=product_id)
+        
+        # Lấy sizes và colors từ field của sản phẩm, không chỉ từ inventory
+        sizes_from_product = []
+        colors_from_product = []
+        
+        if product.sizes:
+            sizes_from_product = [size.strip() for size in product.sizes.split(',') if size.strip()]
+        
+        if product.colors:
+            colors_from_product = [color.strip() for color in product.colors.split(',') if color.strip()]
+        
+        # Nếu không có trong product field, lấy từ inventory
+        if not sizes_from_product or not colors_from_product:
+            inventory_items = product.inventory.all()
+            if not sizes_from_product:
+                sizes_from_product = sorted(set(item.size for item in inventory_items if item.size))
+            if not colors_from_product:
+                colors_from_product = sorted(set(item.color for item in inventory_items if item.color))
+        
+        return JsonResponse({
+            'sizes': sizes_from_product,
+            'colors': colors_from_product
+        })
+        
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+
+@login_required
+@user_passes_test(is_admin)
+def filter_inventory(request):
+    """API endpoint để lọc và trả về HTML cho bảng inventory"""
+    category_id = request.GET.get('category')
+    product_id = request.GET.get('product')
+    size = request.GET.get('size')
+    color = request.GET.get('color')
+    
+    inventory_items = ProductInventory.objects.select_related('product').all()
+    
+    if category_id:
+        inventory_items = inventory_items.filter(product__categories=category_id)
+    if product_id:
+        inventory_items = inventory_items.filter(product_id=product_id)
+    if size:
+        inventory_items = inventory_items.filter(size=size)
+    if color:
+        inventory_items = inventory_items.filter(color=color)
+    
+    # Render chỉ phần tbody của bảng
+    html = render_to_string('admin_dashboard/includes/inventory_table_body.html', {
+        'inventory_items': inventory_items
+    }, request=request)
+    
+    return JsonResponse({
+        'html': html,
+        'total_count': inventory_items.count()
+    })
+
+
+# @login_required
+# @user_passes_test(is_admin)
+# def inventory_add(request):
+#     """Thêm tồn kho mới"""
+#     if request.method == 'POST':
+#         form = ProductInventoryForm(request.POST)
+#         if form.is_valid():
+#             inventory = form.save()
+#             messages.success(request, f'Đã thêm tồn kho cho {inventory.product.name} - {inventory.get_color_display()} - {inventory.size}')
+#             return redirect('admin_dashboard:inventory_list')
+#         else:
+#             messages.error(request, 'Có lỗi trong form. Vui lòng kiểm tra lại.')
+#     else:
+#         form = ProductInventoryForm()
+    
+#     categories = Category.objects.filter(is_active=True)
+#     context = {
+#         'form': form,
+#         'categories': categories,
+#         'action': 'add'
+#     }
+#     return render(request, 'admin_dashboard/inventory_form.html', context)
 
 @login_required
 @user_passes_test(is_admin)
@@ -685,7 +853,7 @@ def inventory_edit(request, inventory_id):
     context = {
         'form': form,
         'inventory': inventory,
-        'action': 'edit',
+        'action': 'edit'
     }
     return render(request, 'admin_dashboard/inventory_form.html', context)
 
@@ -714,8 +882,11 @@ def inventory_delete(request, inventory_id):
 
 @login_required
 @user_passes_test(is_admin)
+@login_required
+@user_passes_test(is_admin)
 def bulk_inventory(request):
     """Cập nhật tồn kho hàng loạt"""
+    categories = Category.objects.filter(is_active=True)
     if request.method == 'POST':
         form = BulkInventoryForm(request.POST)
         if form.is_valid():
@@ -811,6 +982,7 @@ def bulk_inventory(request):
     
     context = {
         'form': form,
+        'categories': categories,
     }
     return render(request, 'admin_dashboard/bulk_inventory.html', context)
 

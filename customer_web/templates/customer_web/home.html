@@ -129,15 +129,18 @@
                     <span class="badge bg-danger position-absolute" style="top: 10px; left: 10px; z-index: 10; font-size: 0.7rem;">
                         🔥 HOT
                     </span>
-                    
                     {% with product.images.first as primary_image %}
                     {% if primary_image %}
-                    <img src="{{ primary_image.image.url }}" class="card-img-top" 
-                         alt="{{ product.name }}" style="height: 250px; object-fit: cover; flex-shrink: 0;">
+                    <a href="{% url 'customer_web:product_detail' product.slug %}">
+                        <img src="{{ primary_image.image.url }}" class="card-img-top" 
+                             alt="{{ product.name }}" style="height: 250px; object-fit: cover; flex-shrink: 0;">
+                    </a>
                     {% else %}
-                    <div class="card-img-top bg-light d-flex align-items-center justify-content-center" style="height: 250px; flex-shrink: 0;">
-                        <i class="fas fa-image fa-3x text-muted"></i>
-                    </div>
+                    <a href="{% url 'customer_web:product_detail' product.slug %}">
+                        <div class="card-img-top bg-light d-flex align-items-center justify-content-center" style="height: 250px; flex-shrink: 0;">
+                            <i class="fas fa-image fa-3x text-muted"></i>
+                        </div>
+                    </a>
                     {% endif %}
                     {% endwith %}
                     
@@ -171,7 +174,7 @@
                         <div class="d-grid gap-2 mt-auto">
                             <a href="{% url 'customer_web:product_detail' product.slug %}" 
                                class="btn btn-outline-danger btn-sm">Xem chi tiết</a>
-                            <button onclick="addToCart({{ product.id }})" 
+                            <button onclick="showAddToCartModal({{ product.id }}, '{{ product.name|escapejs }}')" 
                                     class="btn btn-danger btn-sm">
                                 <i class="fas fa-cart-plus"></i> Thêm vào giỏ
                             </button>
@@ -219,12 +222,16 @@
                 <div class="card product-card h-100 d-flex flex-column">
                     {% with product.images.first as primary_image %}
                     {% if primary_image %}
-                    <img src="{{ primary_image.image.url }}" class="card-img-top" 
-                         alt="{{ product.name }}" style="height: 250px; object-fit: cover; flex-shrink: 0;">
+                    <a href="{% url 'customer_web:product_detail' product.slug %}">
+                        <img src="{{ primary_image.image.url }}" class="card-img-top" 
+                             alt="{{ product.name }}" style="height: 250px; object-fit: cover; flex-shrink: 0;">
+                    </a>
                     {% else %}
-                    <div class="card-img-top bg-light d-flex align-items-center justify-content-center" style="height: 250px; flex-shrink: 0;">
-                        <i class="fas fa-image fa-3x text-muted"></i>
-                    </div>
+                    <a href="{% url 'customer_web:product_detail' product.slug %}">
+                        <div class="card-img-top bg-light d-flex align-items-center justify-content-center" style="height: 250px; flex-shrink: 0;">
+                            <i class="fas fa-image fa-3x text-muted"></i>
+                        </div>
+                    </a>
                     {% endif %}
                     {% endwith %}
                     
@@ -247,7 +254,7 @@
                         <div class="d-grid gap-2 mt-auto">
                             <a href="{% url 'customer_web:product_detail' product.slug %}" 
                                class="btn btn-outline-primary btn-sm">Xem chi tiết</a>
-                            <button onclick="addToCart({{ product.id }})" 
+                            <button onclick="showAddToCartModal({{ product.id }}, '{{ product.name|escapejs }}')" 
                                     class="btn btn-primary btn-sm">
                                 <i class="fas fa-cart-plus"></i> Thêm vào giỏ
                             </button>
@@ -285,12 +292,16 @@
                 <div class="card product-card h-100 d-flex flex-column">
                     {% with product.images.first as primary_image %}
                     {% if primary_image %}
-                    <img src="{{ primary_image.image.url }}" class="card-img-top" 
-                         alt="{{ product.name }}" style="height: 250px; object-fit: cover; flex-shrink: 0;">
+                    <a href="{% url 'customer_web:product_detail' product.slug %}">
+                        <img src="{{ primary_image.image.url }}" class="card-img-top" 
+                             alt="{{ product.name }}" style="height: 250px; object-fit: cover; flex-shrink: 0;">
+                    </a>
                     {% else %}
-                    <div class="card-img-top bg-light d-flex align-items-center justify-content-center" style="height: 250px; flex-shrink: 0;">
-                        <i class="fas fa-image fa-3x text-muted"></i>
-                    </div>
+                    <a href="{% url 'customer_web:product_detail' product.slug %}">
+                        <div class="card-img-top bg-light d-flex align-items-center justify-content-center" style="height: 250px; flex-shrink: 0;">
+                            <i class="fas fa-image fa-3x text-muted"></i>
+                        </div>
+                    </a>
                     {% endif %}
                     {% endwith %}
                     
@@ -314,7 +325,7 @@
                         <div class="d-grid gap-2 mt-auto">
                             <a href="{% url 'customer_web:product_detail' product.slug %}" 
                                class="btn btn-outline-primary btn-sm">Xem chi tiết</a>
-                            <button onclick="addToCart({{ product.id }})" 
+                            <button onclick="showAddToCartModal({{ product.id }}, '{{ product.name|escapejs }}')" 
                                     class="btn btn-primary btn-sm">
                                 <i class="fas fa-cart-plus"></i> Thêm vào giỏ
                             </button>
@@ -352,13 +363,17 @@
             <div class="col-lg-4 col-md-6">
                 <div class="card news-card h-100 shadow-sm">
                     {% if news.image %}
-                    <img src="{{ news.image.url }}" class="card-img-top" 
-                         alt="{{ news.title }}" style="height: 200px; object-fit: cover;">
+                    <a href="{% url 'customer_web:news_detail' news.slug %}">
+                        <img src="{{ news.image.url }}" class="card-img-top" 
+                             alt="{{ news.title }}" style="height: 200px; object-fit: cover;">
+                    </a>
                     {% else %}
-                    <div class="card-img-top bg-light d-flex align-items-center justify-content-center" 
-                         style="height: 200px;">
-                        <i class="fas fa-newspaper fa-3x text-muted"></i>
-                    </div>
+                    <a href="{% url 'customer_web:news_detail' news.slug %}">
+                        <div class="card-img-top bg-light d-flex align-items-center justify-content-center" 
+                             style="height: 200px;">
+                            <i class="fas fa-newspaper fa-3x text-muted"></i>
+                        </div>
+                    </a>
                     {% endif %}
                     
                     <div class="card-body d-flex flex-column">
@@ -411,6 +426,83 @@
         </div>
     </div>
 </section>
+
+<!-- Add to Cart Modal -->
+<div class="modal fade" id="addToCartModal" tabindex="-1" aria-labelledby="addToCartModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addToCartModalLabel">
+                    <i class="fas fa-cart-plus me-2"></i>Thêm vào giỏ hàng
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div id="modal-product-info">
+                    <h6 id="modal-product-name"></h6>
+                </div>
+                
+                <div class="mb-3">
+                    <label for="modal-size" class="form-label">Chọn kích thước <span class="text-danger">*</span></label>
+                    <select class="form-select" id="modal-size" required>
+                        <option value="">-- Chọn kích thước --</option>
+                    </select>
+                    <div class="invalid-feedback">Vui lòng chọn kích thước</div>
+                </div>
+                
+                <div class="mb-3">
+                    <label for="modal-color" class="form-label">Chọn màu sắc</label>
+                    <select class="form-select" id="modal-color">
+                        <option value="">-- Chọn màu sắc --</option>
+                    </select>
+                </div>
+                
+                <div class="mb-3">
+                    <label for="modal-quantity" class="form-label">Số lượng</label>
+                    <input type="number" class="form-control" id="modal-quantity" value="1" min="1" max="10">
+                </div>
+                
+                <div id="stock-info" class="text-muted small"></div>
+                
+                <!-- Hidden CSRF Token -->
+                {% csrf_token %}
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                <button type="button" class="btn btn-primary" onclick="addToCartFromModal()">
+                    <i class="fas fa-cart-plus me-2"></i>Thêm vào giỏ
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Success Modal -->
+<div class="modal fade" id="successModal" tabindex="-1" aria-labelledby="successModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title" id="successModalLabel">
+                    <i class="fas fa-check-circle me-2"></i>Thành công!
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body text-center">
+                <i class="fas fa-check-circle fa-3x text-success mb-3"></i>
+                <h6>Đã thêm sản phẩm vào giỏ hàng thành công!</h6>
+                <p class="text-muted">Bạn có muốn xem giỏ hàng không?</p>
+            </div>
+            <div class="modal-footer justify-content-center">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+                    Tiếp tục mua sắm
+                </button>
+                <a href="{% url 'customer_web:cart' %}" class="btn btn-primary">
+                    <i class="fas fa-shopping-cart me-2"></i>Xem giỏ hàng
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
 
 <style>
 /* Fix button clickability issues */
@@ -599,4 +691,196 @@
     }
 }
 </style>
+
+<script>
+let currentProductId = null;
+
+function showAddToCartModal(productId, productName) {
+    currentProductId = productId;
+    document.getElementById('modal-product-name').textContent = productName;
+    
+    // Reset form
+    document.getElementById('modal-size').innerHTML = '<option value="">-- Chọn kích thước --</option>';
+    document.getElementById('modal-color').innerHTML = '<option value="">-- Chọn màu sắc --</option>';
+    document.getElementById('modal-quantity').value = 1;
+    document.getElementById('stock-info').textContent = '';
+    
+    console.log('Loading variants for product:', productId);
+    
+    // Load product variants
+    fetch(`/api/product/${productId}/inventory/`)
+        .then(response => {
+            console.log('API response status:', response.status);
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            console.log('Received variant data:', data);
+            
+            if (!data.success) {
+                throw new Error(data.error || 'API returned error');
+            }
+            
+            const sizeSelect = document.getElementById('modal-size');
+            const colorSelect = document.getElementById('modal-color');
+            
+            if (!data.variants || data.variants.length === 0) {
+                alert('Sản phẩm này hiện không có biến thể nào.');
+                return;
+            }
+            
+            // Populate sizes
+            const sizes = [...new Set(data.variants.map(v => v.size).filter(s => s))];
+            sizes.forEach(size => {
+                const option = document.createElement('option');
+                option.value = size;
+                option.textContent = size;
+                sizeSelect.appendChild(option);
+            });
+            
+            // Populate colors
+            const colors = [...new Set(data.variants.map(v => v.color).filter(c => c))];
+            colors.forEach(color => {
+                const option = document.createElement('option');
+                option.value = color;
+                option.textContent = color;
+                colorSelect.appendChild(option);
+            });
+            
+            // Show modal
+            new bootstrap.Modal(document.getElementById('addToCartModal')).show();
+        })
+        .catch(error => {
+            console.error('Error loading product variants:', error);
+            alert('Không thể tải thông tin sản phẩm. Vui lòng thử lại.');
+        });
+}
+
+function updateStockInfo() {
+    const size = document.getElementById('modal-size').value;
+    const color = document.getElementById('modal-color').value;
+    
+    if (size && currentProductId) {
+        console.log('Checking stock for:', { size, color, currentProductId });
+        
+        fetch(`/api/product/${currentProductId}/inventory/?size=${encodeURIComponent(size)}&color=${encodeURIComponent(color || '')}`)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log('Stock info received:', data);
+                const stockInfo = document.getElementById('stock-info');
+                
+                if (data.success) {
+                    if (data.quantity > 0) {
+                        stockInfo.innerHTML = `<i class="fas fa-check text-success"></i> Còn ${data.quantity} sản phẩm`;
+                        stockInfo.className = 'text-success small';
+                        document.getElementById('modal-quantity').max = data.quantity;
+                    } else {
+                        stockInfo.innerHTML = `<i class="fas fa-times text-danger"></i> Hết hàng`;
+                        stockInfo.className = 'text-danger small';
+                        document.getElementById('modal-quantity').max = 0;
+                    }
+                } else {
+                    stockInfo.innerHTML = `<i class="fas fa-exclamation-triangle text-warning"></i> Không có thông tin tồn kho`;
+                    stockInfo.className = 'text-warning small';
+                }
+            })
+            .catch(error => {
+                console.error('Error checking stock:', error);
+                const stockInfo = document.getElementById('stock-info');
+                stockInfo.innerHTML = `<i class="fas fa-exclamation-triangle text-warning"></i> Không thể kiểm tra tồn kho`;
+                stockInfo.className = 'text-warning small';
+            });
+    }
+}
+
+function addToCartFromModal() {
+    const size = document.getElementById('modal-size').value;
+    const color = document.getElementById('modal-color').value;
+    const quantity = document.getElementById('modal-quantity').value;
+    
+    console.log('Adding to cart:', { currentProductId, size, color, quantity });
+    
+    // Validate
+    if (!size) {
+        document.getElementById('modal-size').classList.add('is-invalid');
+        alert('Vui lòng chọn kích thước!');
+        return;
+    } else {
+        document.getElementById('modal-size').classList.remove('is-invalid');
+    }
+    
+    if (!currentProductId) {
+        alert('Lỗi: Không xác định được sản phẩm');
+        return;
+    }
+    
+    // Add to cart
+    fetch('/add-to-cart/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value || getCookie('csrftoken')
+        },
+        body: JSON.stringify({
+            product_id: currentProductId,
+            size: size,
+            color: color || '',
+            quantity: parseInt(quantity)
+        })
+    })
+    .then(response => {
+        console.log('Response status:', response.status);
+        return response.json();
+    })
+    .then(data => {
+        console.log('Response data:', data);
+        if (data.success) {
+            // Hide add to cart modal
+            bootstrap.Modal.getInstance(document.getElementById('addToCartModal')).hide();
+            
+            // Show success modal
+            new bootstrap.Modal(document.getElementById('successModal')).show();
+            
+            // Update cart badge (correct ID)
+            const cartBadge = document.getElementById('cart-badge');
+            if (cartBadge && data.cart_total_items) {
+                cartBadge.textContent = data.cart_total_items;
+            }
+        } else {
+            alert(data.message || 'Có lỗi xảy ra khi thêm sản phẩm vào giỏ hàng');
+        }
+    })
+    .catch(error => {
+        console.error('Error adding to cart:', error);
+        alert('Có lỗi xảy ra. Vui lòng thử lại.');
+    });
+}
+
+// Event listeners
+document.getElementById('modal-size').addEventListener('change', updateStockInfo);
+document.getElementById('modal-color').addEventListener('change', updateStockInfo);
+
+// Helper function to get CSRF token
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+</script>
 {% endblock %}

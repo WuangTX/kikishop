@@ -30,6 +30,9 @@ urlpatterns = [
     path('checkout/', views.checkout_view, name='checkout'),
     path('order-success/<uuid:order_id>/', views.order_success, name='order_success'),
     path('order-history/', views.order_history, name='order_history'),
+    path('cancel-order/<uuid:order_id>/', views.cancel_order, name='cancel_order'),
+    path('request-return/<uuid:order_id>/', views.request_return, name='request_return'),
+    path('reorder/<uuid:order_id>/', views.reorder_items, name='reorder_items'),
     
     # News
     path('news/', views.news_list, name='news_list'),

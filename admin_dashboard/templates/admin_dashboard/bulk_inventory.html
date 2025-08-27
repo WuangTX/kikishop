@@ -27,72 +27,62 @@
                         </div>
                     </div>
                     
-                    <div class="row">
-                        <div class="col-md-12 mb-3">
-                            <label for="{{ form.product.id_for_label }}" class="form-label">
-                                Sản phẩm <span class="text-danger">*</span>
-                            </label>
+    
+                    <div class="row mb-3">
+                        <div class="col-md-12">
+                            <label for="category" class="form-label">Danh mục sản phẩm</label>
+                            <select class="form-select" id="category" name="category">
+                                <option value="">-- Chọn danh mục --</option>
+                                {% for category in categories %}
+                                <option value="{{ category.id }}">{{ category.name }}</option>
+                                {% endfor %}
+                            </select>
+                            <div class="form-text">Chọn danh mục để lọc sản phẩm</div>
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-12">
+                            <label for="{{ form.product.id_for_label }}" class="form-label">Sản phẩm</label>
                             {{ form.product }}
                             {% if form.product.errors %}
-                                <div class="invalid-feedback d-block">
-                                    {{ form.product.errors.0 }}
-                                </div>
+                            <div class="invalid-feedback">{{ form.product.errors }}</div>
                             {% endif %}
                         </div>
                     </div>
-                    
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label for="{{ form.sizes.id_for_label }}" class="form-label">
-                                Size <span class="text-danger">*</span>
-                            </label>
+
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="{{ form.sizes.id_for_label }}" class="form-label">Kích thước</label>
                             {{ form.sizes }}
                             {% if form.sizes.errors %}
-                                <div class="invalid-feedback d-block">
-                                    {{ form.sizes.errors.0 }}
-                                </div>
+                            <div class="invalid-feedback">{{ form.sizes.errors }}</div>
                             {% endif %}
-                            <div class="form-text">Chọn một hoặc nhiều size</div>
                         </div>
-                        
-                        <div class="col-md-6 mb-3">
-                            <label for="{{ form.colors.id_for_label }}" class="form-label">
-                                Màu sắc <span class="text-danger">*</span>
-                            </label>
+                        <div class="col-md-6">
+                            <label for="{{ form.colors.id_for_label }}" class="form-label">Màu sắc</label>
                             {{ form.colors }}
                             {% if form.colors.errors %}
-                                <div class="invalid-feedback d-block">
-                                    {{ form.colors.errors.0 }}
-                                </div>
+                            <div class="invalid-feedback">{{ form.colors.errors }}</div>
                             {% endif %}
-                            <div class="form-text">Chọn một hoặc nhiều màu</div>
                         </div>
                     </div>
-                    
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label for="{{ form.operation.id_for_label }}" class="form-label">
-                                Thao tác <span class="text-danger">*</span>
-                            </label>
+
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="{{ form.operation.id_for_label }}" class="form-label">Thao tác</label>
                             {{ form.operation }}
                             {% if form.operation.errors %}
-                                <div class="invalid-feedback d-block">
-                                    {{ form.operation.errors.0 }}
-                                </div>
+                            <div class="invalid-feedback">{{ form.operation.errors }}</div>
                             {% endif %}
                         </div>
-                        
-                        <div class="col-md-6 mb-3">
-                            <label for="{{ form.quantity.id_for_label }}" class="form-label">
-                                Số lượng <span class="text-danger">*</span>
-                            </label>
+                        <div class="col-md-6">
+                            <label for="{{ form.quantity.id_for_label }}" class="form-label">Số lượng</label>
                             {{ form.quantity }}
+                            <div id="quantityHelp" class="form-text">Số lượng để thực hiện thao tác</div>
                             {% if form.quantity.errors %}
-                                <div class="invalid-feedback d-block">
-                                    {{ form.quantity.errors.0 }}
-                                </div>
+                            <div class="invalid-feedback">{{ form.quantity.errors }}</div>
                             {% endif %}
-                            <div class="form-text" id="quantityHelp">Số lượng để thực hiện thao tác</div>
                         </div>
                     </div>
                     
@@ -208,6 +198,7 @@
 {% block extra_js %}
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    const categoryField = document.getElementById('category');
     const productField = document.getElementById('{{ form.product.id_for_label }}');
     const sizeField = document.getElementById('{{ form.sizes.id_for_label }}');
     const colorField = document.getElementById('{{ form.colors.id_for_label }}');
@@ -217,6 +208,71 @@ document.addEventListener('DOMContentLoaded', function() {
     const previewSection = document.getElementById('previewSection');
     const previewContent = document.getElementById('previewContent');
     const quantityHelp = document.getElementById('quantityHelp');
+
+    // Xử lý khi chọn danh mục
+    categoryField.addEventListener('change', function() {
+        const categoryId = this.value;
+        productField.innerHTML = '<option value="">Đang tải...</option>';
+        sizeField.innerHTML = '';
+        colorField.innerHTML = '';
+
+        if (categoryId) {
+            fetch(`/dashboard/inventory/get-products-by-category/?category=${categoryId}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.error) {
+                        productField.innerHTML = '<option value="">Lỗi: ' + data.error + '</option>';
+                        return;
+                    }
+                    productField.innerHTML = '<option value="">-- Chọn sản phẩm --</option>';
+                    data.products.forEach(product => {
+                        const option = new Option(product.name, product.id);
+                        productField.add(option);
+                    });
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    productField.innerHTML = '<option value="">Lỗi khi tải dữ liệu</option>';
+                });
+        } else {
+            productField.innerHTML = '<option value="">-- Chọn sản phẩm --</option>';
+        }
+    });
+
+    // Xử lý khi chọn sản phẩm
+    productField.addEventListener('change', function() {
+        const productId = this.value;
+        sizeField.innerHTML = '<option value="">Đang tải...</option>';
+        colorField.innerHTML = '<option value="">Đang tải...</option>';
+
+        if (productId) {
+            fetch(`/dashboard/inventory/get-product-variants/?product=${productId}`)
+                .then(response => response.json())
+                .then(data => {
+                    // Cập nhật danh sách size
+                    sizeField.innerHTML = '';
+                    data.sizes.forEach(size => {
+                        const option = new Option(size, size);
+                        sizeField.add(option);
+                    });
+
+                    // Cập nhật danh sách màu
+                    colorField.innerHTML = '';
+                    data.colors.forEach(color => {
+                        const option = new Option(color, color);
+                        colorField.add(option);
+                    });
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    sizeField.innerHTML = '<option value="">Lỗi khi tải dữ liệu</option>';
+                    colorField.innerHTML = '<option value="">Lỗi khi tải dữ liệu</option>';
+                });
+        } else {
+            sizeField.innerHTML = '';
+            colorField.innerHTML = '';
+        }
+    });
     
     // Update help text based on operation
     operationField.addEventListener('change', function() {

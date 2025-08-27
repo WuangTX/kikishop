@@ -73,7 +73,71 @@
             background-position: center;
             background-size: 100%;
         }
+        
+        @media (min-width: 768px) {
+            .col-custom-12 {
+                flex: 0 0 auto;
+                width: 11%;
+                padding: 0 5px;
+                margin-right: -20px;
+            } 
+        }
+        @media (max-width: 767.98px) {
+            .col-custom-12 {
+                flex: 0 0 auto;
+                padding: 0 5px;
+                width: 16%;
+                margin-right: 0;
+            }
+            .col-custom-14 {
+                flex: 0 0 auto;
+                width: 84%;
+                padding: 0 5px;
+            }
+            .col-custom-13 {
+                flex: 0 0 auto;
+                width: 20%;
+                padding: 0 0px;
+            }
+            .col-custom-15 {
+                flex: 0 0 auto;
+                width: 35%;
+                padding: 0 5px;
+                margin-right: auto;
+            }
+            .col-custom-16 {
+                flex: 0 0 auto;
+                width: 10%;
+                padding: 0 5px;
+                margin-left: auto;   
+            }
+        }
+        @media (max-width: 575.98px) {
+            .col-custom-13 {
+                flex: 0 0 auto;
+                width: 30%;
+                padding: 0 0px;
+            }
+        }
 
+        @media (min-width: 1440px) {
+            .col-custom-13 {
+                flex: 0 0 auto;
+                width: 10%;
+                padding: 0 5px;
+            }
+            .col-custom-16 {
+                flex: 0 0 auto;
+                width: 10%;
+                padding: 0 5px;
+                margin-left: auto;   
+            }
+        }
+        input[type=number]::-webkit-outer-spin-button,
+        input[type=number]::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
 
         
         /* Dropdown hover effects - only on desktop */
@@ -707,6 +771,25 @@
                 animation-delay: 1.5s;
             }
         }
+
+        @media (max-width: 991px) {
+            .floating-card-2 {
+                bottom: -20%; !important;
+                left: 75%; !important;
+                animation-delay: 1.5s;
+            }
+        }
+        
+        @media (max-width: 1200px) {
+            .floating-card-2 {
+                bottom: -30%; !important;
+                left: 75%; !important;
+                animation-delay: 1.5s;
+            }
+        }
+
+        
+
         
         
         
@@ -956,6 +1039,27 @@
                 box-shadow: 0 2px 10px rgba(0,0,0,0.1);
             }
         }
+        #simple-back-to-top {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            width: 50px;
+            height: 50px;
+            background-color: #ff6b9d;
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            cursor: pointer;
+            z-index: 99999;
+        }
+        #simple-back-to-top:hover {
+            background-color: #d1477a; /* Màu nền đậm hơn */
+            transform: scale(1.1);      /* Phóng to nhẹ */
+            transition: all 0.3s ease;  /* Mượt mà */
+        }
     </style>
     
     {% block extra_css %}{% endblock %}
@@ -964,7 +1068,7 @@
     <!-- Navigation -->
     <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm sticky-top">
         <div class="container">
-            <a class="navbar-brand p-0 m-0" href="{% url 'customer_web:home' %}">
+            <a class="navbar-brand p-0 m-10" href="{% url 'customer_web:home' %}">
                 <img src="{% static 'customer_web/images/logo.jpg' %}" alt="KiKi Logo" class="d-inline-block" style="margin: 0; padding: 0;">
             </a>
             <!-- Hamburger Menu Button -->
@@ -1260,6 +1364,11 @@
         {% block content %}
         {% endblock %}
     </main>
+
+    <!-- Simple Back To Top Button -->
+    <div id="simple-back-to-top">
+        <i class="fas fa-arrow-up"></i>
+    </div>
 
     <!-- Footer -->
     <footer class="footer mt-5">
@@ -1590,6 +1699,15 @@
         saleCard.classList.remove('shake-bell');
         }, 800); // bằng thời gian animation
     }, 3000); // rung mỗi 3 giây
+
+
+    // Simple Back To Top functionality
+        document.getElementById('simple-back-to-top').addEventListener('click', function() {
+            window.scrollTo({
+                top: 0,
+                behavior: 'smooth'
+            });
+        });
 </script>
 
 {% block extra_js %}{% endblock %}

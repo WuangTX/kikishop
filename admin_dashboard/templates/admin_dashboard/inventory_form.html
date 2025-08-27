@@ -16,45 +16,30 @@
                             <label for="{{ form.product.id_for_label }}" class="form-label">
                                 Sản phẩm <span class="text-danger">*</span>
                             </label>
-                            {{ form.product }}
-                            {% if form.product.errors %}
-                                <div class="invalid-feedback d-block">
-                                    {{ form.product.errors.0 }}
-                                </div>
-                            {% endif %}
+                           <td><strong>{{ form.instance.product.name }}</strong></td>
                         </div>
                     </div>
-                    
+                     
                     <div class="row">
                         <div class="col-md-6 mb-3">
                             <label for="{{ form.size.id_for_label }}" class="form-label">
                                 Size <span class="text-danger">*</span>
                             </label>
-                            {{ form.size }}
-                            {% if form.size.errors %}
-                                <div class="invalid-feedback d-block">
-                                    {{ form.size.errors.0 }}
-                                </div>
-                            {% endif %}
+                            <td><span class="badge bg-secondary">{{ form.instance.size }}</span></td>
                         </div>
                         
                         <div class="col-md-6 mb-3">
                             <label for="{{ form.color.id_for_label }}" class="form-label">
                                 Màu sắc <span class="text-danger">*</span>
                             </label>
-                            {{ form.color }}
-                            {% if form.color.errors %}
-                                <div class="invalid-feedback d-block">
-                                    {{ form.color.errors.0 }}
-                                </div>
-                            {% endif %}
+                            <td><span class="badge" style="background-color: {{ form.instance.color }}; color: #212529;">{{ form.instance.get_color_display }}</span></td>
                         </div>
                     </div>
                     
                     <div class="row">
                         <div class="col-md-6 mb-3">
                             <label for="{{ form.quantity.id_for_label }}" class="form-label">
-                                Số lượng tồn kho <span class="text-danger">*</span>
+                                Chỉnh sửa số lượng tồn kho ở đây <span class="text-danger">*</span>
                             </label>
                             {{ form.quantity }}
                             {% if form.quantity.errors %}
@@ -66,9 +51,9 @@
                         </div>
                         
                         <div class="col-md-6 mb-3">
-                            <label class="form-label">SKU (Tự động tạo)</label>
-                            <input type="text" class="form-control" readonly id="skuPreview" value="{% if form.instance.pk %}{{ form.instance.sku }}{% endif %}" placeholder="Sẽ được tạo tự động">
-                            <div class="form-text">SKU sẽ được tạo tự động dựa trên sản phẩm, size và màu</div>
+                            <label class="form-label">SKU (Tự động tạo khi thêm sản phẩm)</label>
+                            <input type="text" class="form-control" readonly id="skuPreview" value ={{ form.instance.sku }}>
+                            <div class="form-text">SKU đã được tạo tự động dựa trên sản phẩm, size và màu</div>
                         </div>
                     </div>
                     

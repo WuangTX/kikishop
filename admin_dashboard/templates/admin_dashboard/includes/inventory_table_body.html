@@ -1,0 +1,65 @@
+{% for inventory in inventory_items %}
+<tr>
+    <td>
+        <div class="fw-semibold">{{ inventory.product.name }}</div>
+        <small class="text-muted">
+            {% for category in inventory.product.categories.all %}
+                {{ category.name }}{% if not forloop.last %}, {% endif %}
+            {% endfor %}
+        </small>
+        <!-- Show SKU on mobile -->
+        <div class="d-md-none mt-1">
+            <code class="small">{{ inventory.sku }}</code>
+        </div>
+    </td>
+    <td class="text-center">
+        <span class="badge bg-secondary">{{ inventory.size }}</span>
+    </td>
+    <td class="text-center">
+        <span class="badge bg-secondary">{{ inventory.color }}</span>
+    </td>
+    <td class="text-center">
+        <div class="fw-semibold {% if inventory.quantity == 0 %}text-danger{% elif inventory.is_low_stock %}text-warning{% else %}text-success{% endif %}">
+            {{ inventory.quantity }}
+        </div>
+    </td>
+    <td class="text-center d-none d-md-table-cell">
+        <code>{{ inventory.sku }}</code>
+    </td>
+    <td class="text-center">
+        {% if inventory.quantity == 0 %}
+            <span class="badge bg-danger">Hết hàng</span>
+        {% elif inventory.is_low_stock %}
+            <span class="badge bg-warning">Sắp hết</span>
+        {% else %}
+            <span class="badge bg-success">Còn hàng</span>
+        {% endif %}
+    </td>
+    <td class="text-center d-none d-lg-table-cell">
+        <small class="text-muted">{{ inventory.updated_at|date:"d/m/Y H:i" }}</small>
+    </td>
+    <td class="text-center">
+        <div class="btn-group btn-group-sm">
+            <a href="{% url 'admin_dashboard:inventory_edit' inventory.id %}" 
+               class="btn btn-outline-primary">
+                <i class="fas fa-edit"></i>
+            </a>
+            <button type="button" 
+                    class="btn btn-outline-danger" 
+                    onclick="deleteInventory({{ inventory.id }}, '{{ inventory.product.name }} - {{ inventory.size }} - {{ inventory.color }}')">
+                <i class="fas fa-trash"></i>
+            </button>
+        </div>
+    </td>
+</tr>
+{% empty %}
+<tr>
+    <td colspan="8" class="text-center py-5">
+        <div class="text-muted">
+            <i class="fas fa-box-open fa-3x mb-3"></i>
+            <h5>Không tìm thấy tồn kho nào</h5>
+            <p class="mb-0">Thử thay đổi bộ lọc hoặc thêm tồn kho mới</p>
+        </div>
+    </td>
+</tr>
+{% endfor %}

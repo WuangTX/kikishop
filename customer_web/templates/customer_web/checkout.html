@@ -34,12 +34,13 @@
                             
                             <div class="col-md-6 mb-3">
                                 <label for="phone" class="form-label">Số điện thoại *</label>
-                                <input type="tel" class="form-control" id="phone" name="phone" required>
+                                <input type="tel" class="form-control" id="phone" name="phone" 
+                                       value="{% if user.is_authenticated and user_profile %}{{ user_profile.phone }}{% endif %}" required>
                             </div>
                             
                             <div class="col-12 mb-3">
                                 <label for="address" class="form-label">Địa chỉ giao hàng *</label>
-                                <textarea class="form-control" id="address" name="address" rows="3" required></textarea>
+                                <textarea class="form-control" id="address" name="address" rows="3" required>{% if user.is_authenticated and user_profile %}{{ user_profile.address }}{% endif %}</textarea>
                             </div>
                             
                             <div class="col-12 mb-3">

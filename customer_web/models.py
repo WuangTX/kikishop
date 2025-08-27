@@ -172,6 +172,11 @@ class Order(models.Model):
         ('refunded', 'Đã hoàn tiền'),
     ]
     
+    PAYMENT_METHOD_CHOICES = [
+        ('cod', 'Thanh toán khi nhận hàng'),
+        ('transfer', 'Chuyển khoản ngân hàng'),
+    ]
+    
     order_id = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
     user = models.ForeignKey(User, on_delete=models.CASCADE, blank=True, null=True)
     guest_email = models.EmailField(blank=True, null=True)  # For guest orders
@@ -181,6 +186,7 @@ class Order(models.Model):
     phone = models.CharField(max_length=15)
     address = models.TextField()
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
+    payment_method = models.CharField(max_length=20, choices=PAYMENT_METHOD_CHOICES, default='cod')
     total_amount = models.DecimalField(max_digits=10, decimal_places=0)
     notes = models.TextField(blank=True)
     
@@ -191,6 +197,10 @@ class Order(models.Model):
     return_completed_at = models.DateTimeField(blank=True, null=True, verbose_name="Ngày hoàn trả hoàn tất")
     refund_amount = models.DecimalField(max_digits=10, decimal_places=0, blank=True, null=True, verbose_name="Số tiền hoàn")
     refund_completed_at = models.DateTimeField(blank=True, null=True, verbose_name="Ngày hoàn tiền")
+    
+    # Thông tin hủy đơn
+    cancel_reason = models.TextField(blank=True, verbose_name="Lý do hủy đơn")
+    cancelled_at = models.DateTimeField(blank=True, null=True, verbose_name="Ngày hủy đơn")
     
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

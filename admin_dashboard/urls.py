@@ -37,7 +37,11 @@ urlpatterns = [
     
     # Quản lý tồn kho
     path('inventory/', views.inventory_list, name='inventory_list'),
-    path('inventory/add/', views.inventory_add, name='inventory_add'),
+    # path('inventory/add/', views.inventory_add, name='inventory_add'),
+    path('inventory/get-products-by-category/', views.get_products_by_category, name='get_products_by_category'),
+    path('inventory/get-product-variants/', views.get_product_variants, name='get_product_variants'),
+    path('inventory/filter/', views.filter_inventory, name='filter_inventory'),
+
     path('inventory/<int:inventory_id>/edit/', views.inventory_edit, name='inventory_edit'),
     path('inventory/<int:inventory_id>/delete/', views.inventory_delete, name='inventory_delete'),
     path('inventory/bulk/', views.bulk_inventory, name='bulk_inventory'),

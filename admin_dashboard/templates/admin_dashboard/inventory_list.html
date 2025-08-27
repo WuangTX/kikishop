@@ -21,9 +21,6 @@
                 </div>
                 <div class="col-lg-4 text-end">
                     <div class="btn-group">
-                        <a href="{% url 'admin_dashboard:inventory_add' %}" class="btn btn-primary">
-                            <i class="fas fa-plus me-2"></i>Thêm tồn kho
-                        </a>
                         <a href="{% url 'admin_dashboard:bulk_inventory' %}" class="btn btn-success">
                             <i class="fas fa-layer-group me-2"></i>Cập nhật hàng loạt
                         </a>
@@ -33,6 +30,15 @@
             
             <!-- Filters -->
             <div class="row">
+                <select name="category" id="category-select" class="form-select">
+                    <option value="">Tất cả danh mục</option>
+                    {% for category in categories %}
+                        <option value="{{ category.id }}" {% if category.id|stringformat:'s' == selected_category %}selected{% endif %}>
+                            {{ category.name }}
+                        </option>
+                    {% endfor %}
+                </select>
+
                 <div class="col-md-3 mb-2">
                     <label class="form-label small">Sản phẩm</label>
                     <select name="product" class="form-select form-select-sm">
@@ -274,42 +280,116 @@
 
 {% block extra_js %}
 <script>
-function deleteInventory(inventoryId, inventoryInfo) {
-    if (confirm(`Bạn có chắc chắn muốn xóa tồn kho "${inventoryInfo}"?`)) {
-        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
-        
-        if (!csrfToken) {
-            alert('Không tìm thấy CSRF token');
+document.addEventListener('DOMContentLoaded', function () {
+    const categorySelect = document.getElementById('category-select');
+    const productSelect = document.querySelector('select[name="product"]');
+    const sizeSelect = document.querySelector('select[name="size"]');
+    const colorSelect = document.querySelector('select[name="color"]');
+    const tableBody = document.querySelector('tbody');
+
+    // Hàm cập nhật danh sách sản phẩm theo danh mục
+    async function updateProductsByCategory(categoryId) {
+        try {
+            const response = await fetch(`/dashboard/inventory/get-products-by-category/?category_id=${categoryId}`);
+            const data = await response.json();
+            
+            productSelect.innerHTML = '<option value="">Tất cả sản phẩm</option>';
+            data.products.forEach(product => {
+                const option = document.createElement('option');
+                option.value = product.id;
+                option.textContent = product.name;
+                productSelect.appendChild(option);
+            });
+            
+            // Reset size và color selects
+            sizeSelect.innerHTML = '<option value="">Tất cả size</option>';
+            colorSelect.innerHTML = '<option value="">Tất cả màu</option>';
+            
+            // Cập nhật bảng inventory
+            updateInventoryTable();
+        } catch (err) {
+            console.error('Lỗi khi tải sản phẩm:', err);
+        }
+    }
+
+    // Hàm cập nhật size và color theo sản phẩm
+    async function updateSizeAndColorByProduct(productId) {
+        if (!productId) {
+            sizeSelect.innerHTML = '<option value="">Tất cả size</option>';
+            colorSelect.innerHTML = '<option value="">Tất cả màu</option>';
             return;
         }
-        
-        fetch(`/dashboard/inventory/${inventoryId}/delete/`, {
-            method: 'POST',
-            headers: {
-                'X-CSRFToken': csrfToken,
-                'X-Requested-With': 'XMLHttpRequest',
-                'Content-Type': 'application/json'
-            }
-        })
-        .then(response => {
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-            return response.json();
-        })
-        .then(data => {
-            if (data.success) {
-                alert(data.message);
-                location.reload();
-            } else {
-                alert('Lỗi: ' + data.message);
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            alert('Có lỗi xảy ra: ' + error.message);
-        });
+
+        try {
+            const response = await fetch(`/dashboard/inventory/get-product-variants/?product_id=${productId}`);
+            const data = await response.json();
+            
+            // Cập nhật size options
+            sizeSelect.innerHTML = '<option value="">Tất cả size</option>';
+            data.sizes.forEach(size => {
+                const option = document.createElement('option');
+                option.value = size;
+                option.textContent = size;
+                sizeSelect.appendChild(option);
+            });
+            
+            // Cập nhật color options
+            colorSelect.innerHTML = '<option value="">Tất cả màu</option>';
+            data.colors.forEach(color => {
+                const option = document.createElement('option');
+                option.value = color;
+                option.textContent = color;
+                colorSelect.appendChild(option);
+            });
+            
+            // Cập nhật bảng inventory
+            updateInventoryTable();
+        } catch (err) {
+            console.error('Lỗi khi tải variants:', err);
+        }
     }
-}
+
+    // Hàm cập nhật bảng inventory
+    async function updateInventoryTable() {
+        const queryParams = new URLSearchParams({
+            category: categorySelect.value || '',
+            product: productSelect.value || '',
+            size: sizeSelect.value || '',
+            color: colorSelect.value || ''
+        });
+
+        try {
+            const response = await fetch(`/dashboard/inventory/filter/?${queryParams.toString()}`);
+            const data = await response.json();
+            
+            // Cập nhật nội dung bảng
+            tableBody.innerHTML = data.html;
+            
+            // Cập nhật badge số lượng
+            const countBadge = document.querySelector('.table-card-title .badge');
+            if (countBadge) {
+                countBadge.textContent = data.total_count;
+            }
+        } catch (err) {
+            console.error('Lỗi khi cập nhật bảng:', err);
+        }
+    }
+
+    // Event Listeners
+    categorySelect.addEventListener('change', function() {
+        updateProductsByCategory(this.value);
+    });
+
+    productSelect.addEventListener('change', function() {
+        updateSizeAndColorByProduct(this.value);
+    });
+
+    // Cập nhật bảng khi thay đổi size hoặc color
+    sizeSelect.addEventListener('change', updateInventoryTable);
+    colorSelect.addEventListener('change', updateInventoryTable);
+});
+
+
+
 </script>
 {% endblock %}

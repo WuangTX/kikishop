@@ -55,15 +55,34 @@
                             </div>
                             <div class="card-body">
                                 <div class="row mb-3">
-                                    <div class="col-md-8">
+                                    <div class="col-md-6">
                                         <h6>Thông tin giao hàng:</h6>
                                         <p class="mb-1"><strong>{{ order.full_name }}</strong></p>
                                         <p class="mb-1">{{ order.phone }}</p>
                                         <p class="mb-0 text-muted">{{ order.address }}</p>
                                     </div>
-                                    <div class="col-md-4 text-md-end">
-                                        <h6>Tổng tiền:</h6>
+                                    <div class="col-md-6">
+                                        <div class="row">
+                                            <div class="col-6">
+                                                <h6>Phương thức thanh toán:</h6>
+                                                <p class="mb-2">
+                                                    {% if order.payment_method == 'cod' %}
+                                                        <i class="fas fa-money-bill-wave text-success me-1"></i>
+                                                        Thanh toán khi nhận hàng
+                                                    {% elif order.payment_method == 'transfer' %}
+                                                        <i class="fas fa-university text-primary me-1"></i>
+                                                        Chuyển khoản ngân hàng
+                                                    {% else %}
+                                                        <i class="fas fa-money-bill-wave text-success me-1"></i>
+                                                        Thanh toán khi nhận hàng
+                                                    {% endif %}
+                                                </p>
+                                            </div>
+                                            <div class="col-6 text-end">
+                                                <h6>Tổng tiền:</h6>
 <p class="h5 text-primary mb-0">{{ order.total_amount|currency_vnd }}</p>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                                 
@@ -122,16 +141,24 @@
                                         </a>
                                         {% if order.status == 'pending' or order.status == 'confirmed' %}
                                         <button class="btn btn-outline-danger btn-sm" 
-                                                onclick="cancelOrder('{{ order.order_id }}')">
+                                                data-bs-toggle="modal" 
+                                                data-bs-target="#cancelOrderModal"
+                                                data-order-id="{{ order.order_id }}"
+                                                data-order-number="#{{ order.order_id.hex|slice:":8"|upper }}">
                                             <i class="fas fa-times"></i> Hủy đơn
                                         </button>
                                         {% endif %}
                                         {% if order.status == 'delivered' %}
-                                        <button class="btn btn-outline-warning btn-sm">
+                                        <button class="btn btn-outline-warning btn-sm" 
+                                                onclick="reorderItems('{{ order.order_id }}')">
                                             <i class="fas fa-redo"></i> Mua lại
                                         </button>
                                         <button class="btn btn-outline-info btn-sm" 
-                                                onclick="requestReturn('{{ order.order_id }}')">
+                                                data-bs-toggle="modal" 
+                                                data-bs-target="#returnOrderModal"
+                                                data-order-id="{{ order.order_id }}"
+                                                data-order-number="#{{ order.order_id.hex|slice:":8"|upper }}"
+                                                data-order-date="{{ order.created_at|date:"c" }}">
                                             <i class="fas fa-undo"></i> Yêu cầu hoàn trả
                                         </button>
                                         {% endif %}
@@ -206,59 +233,420 @@
     </div>
 </div>
 
+<!-- Cancel Order Modal -->
+<div class="modal fade" id="cancelOrderModal" tabindex="-1" aria-labelledby="cancelOrderModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="cancelOrderModalLabel">
+                    <i class="fas fa-times-circle text-danger"></i> Hủy đơn hàng
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-warning">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    Bạn có chắc chắn muốn hủy đơn hàng <strong id="cancelOrderNumber"></strong>?
+                </div>
+                <form id="cancelOrderForm">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label for="cancelReason" class="form-label">Lý do hủy đơn:</label>
+                        <select class="form-select" id="cancelReason" name="reason" required>
+                            <option value="">Chọn lý do hủy đơn</option>
+                            <option value="changed_mind">Đổi ý không muốn mua</option>
+                            <option value="found_better_price">Tìm được giá tốt hơn</option>
+                            <option value="ordered_wrong">Đặt nhầm sản phẩm</option>
+                            <option value="delivery_too_long">Thời gian giao hàng quá lâu</option>
+                            <option value="other">Lý do khác</option>
+                        </select>
+                    </div>
+                    <div class="mb-3" id="otherReasonDiv" style="display: none;">
+                        <label for="otherReason" class="form-label">Lý do cụ thể:</label>
+                        <textarea class="form-control" id="otherReason" name="other_reason" rows="3" placeholder="Vui lòng nhập lý do cụ thể..."></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times"></i> Đóng
+                </button>
+                <button type="button" class="btn btn-danger" onclick="submitCancelOrder()">
+                    <i class="fas fa-check"></i> Xác nhận hủy đơn
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Return Order Modal -->
+<div class="modal fade" id="returnOrderModal" tabindex="-1" aria-labelledby="returnOrderModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="returnOrderModalLabel">
+                    <i class="fas fa-undo text-info"></i> Yêu cầu hoàn trả
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle"></i>
+                    Yêu cầu hoàn trả cho đơn hàng <strong id="returnOrderNumber"></strong>
+                    <br><small>Thời gian hoàn trả chỉ có hiệu lực trong vòng 7 ngày kể từ khi đặt hàng</small>
+                </div>
+                <div id="returnTimeWarning" class="alert alert-danger" style="display: none;">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    Đã hết hạn yêu cầu hoàn hàng. Thời gian hoàn trả chỉ có hiệu lực trong vòng 7 ngày kể từ khi đặt hàng.
+                </div>
+                <form id="returnOrderForm">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label for="returnReason" class="form-label">Lý do hoàn trả: <span class="text-danger">*</span></label>
+                        <select class="form-select" id="returnReason" name="reason" required>
+                            <option value="">Chọn lý do hoàn trả</option>
+                            <option value="defective">Sản phẩm bị lỗi/hư hỏng</option>
+                            <option value="wrong_item">Gửi sai sản phẩm</option>
+                            <option value="not_as_described">Sản phẩm không đúng mô tả</option>
+                            <option value="size_issue">Sai size/không vừa</option>
+                            <option value="quality_issue">Chất lượng không như mong đợi</option>
+                            <option value="changed_mind">Đổi ý không muốn sản phẩm</option>
+                            <option value="other">Lý do khác</option>
+                        </select>
+                    </div>
+                    <div class="mb-3" id="returnOtherReasonDiv" style="display: none;">
+                        <label for="returnOtherReason" class="form-label">Lý do cụ thể:</label>
+                        <textarea class="form-control" id="returnOtherReason" name="other_reason" rows="3" placeholder="Vui lòng mô tả chi tiết lý do hoàn trả..."></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label for="returnDescription" class="form-label">Mô tả chi tiết: <span class="text-danger">*</span></label>
+                        <textarea class="form-control" id="returnDescription" name="description" rows="4" required placeholder="Vui lòng mô tả chi tiết tình trạng sản phẩm và lý do hoàn trả..."></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Điều kiện hoàn trả:</label>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="returnCondition1" required>
+                            <label class="form-check-label" for="returnCondition1">
+                                Sản phẩm còn nguyên vẹn, chưa qua sử dụng (trừ trường hợp kiểm tra)
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="returnCondition2" required>
+                            <label class="form-check-label" for="returnCondition2">
+                                Còn đầy đủ bao bì, nhãn mác, phụ kiện kèm theo
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="returnCondition3" required>
+                            <label class="form-check-label" for="returnCondition3">
+                                Tôi đồng ý với các điều khoản hoàn trả của cửa hàng
+                            </label>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times"></i> Đóng
+                </button>
+                <button type="button" class="btn btn-info" onclick="submitReturnRequest()">
+                    <i class="fas fa-paper-plane"></i> Gửi yêu cầu hoàn trả
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Success Modal for Reorder -->
+<div class="modal fade" id="reorderSuccessModal" tabindex="-1" aria-labelledby="reorderSuccessModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title" id="reorderSuccessModalLabel">
+                    <i class="fas fa-check-circle me-2"></i>Thành công!
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body text-center">
+                <i class="fas fa-shopping-cart fa-3x text-success mb-3"></i>
+                <h6 id="reorderSuccessMessage">Đã thêm sản phẩm vào giỏ hàng thành công!</h6>
+                <p class="text-muted">Bạn có muốn xem giỏ hàng không?</p>
+            </div>
+            <div class="modal-footer justify-content-center">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times me-1"></i>Tiếp tục mua sắm
+                </button>
+                <a href="{% url 'customer_web:cart' %}" class="btn btn-success">
+                    <i class="fas fa-shopping-cart me-1"></i>Xem giỏ hàng
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script>
-function cancelOrder(orderId) {
-    if (confirm('Bạn có chắc chắn muốn hủy đơn hàng này?')) {
-        // Add AJAX call to cancel order
-        fetch(`/cancel-order/${orderId}/`, {
-            method: 'POST',
-            headers: {
-                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
-                'Content-Type': 'application/json',
-            },
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                location.reload();
-            } else {
-                alert('Có lỗi xảy ra khi hủy đơn hàng');
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            alert('Có lỗi xảy ra khi hủy đơn hàng');
-        });
+// Global variables
+let currentOrderId = null;
+
+// Modal event handlers
+document.addEventListener('DOMContentLoaded', function() {
+    // Cancel Order Modal
+    const cancelModal = document.getElementById('cancelOrderModal');
+    cancelModal.addEventListener('show.bs.modal', function (event) {
+        const button = event.relatedTarget;
+        currentOrderId = button.getAttribute('data-order-id');
+        const orderNumber = button.getAttribute('data-order-number');
+        
+        document.getElementById('cancelOrderNumber').textContent = orderNumber;
+        document.getElementById('cancelOrderForm').reset();
+        document.getElementById('otherReasonDiv').style.display = 'none';
+    });
+    
+    // Return Order Modal
+    const returnModal = document.getElementById('returnOrderModal');
+    returnModal.addEventListener('show.bs.modal', function (event) {
+        const button = event.relatedTarget;
+        currentOrderId = button.getAttribute('data-order-id');
+        const orderNumber = button.getAttribute('data-order-number');
+        const orderDate = button.getAttribute('data-order-date');
+        
+        document.getElementById('returnOrderNumber').textContent = orderNumber;
+        document.getElementById('returnOrderForm').reset();
+        document.getElementById('returnOtherReasonDiv').style.display = 'none';
+        document.getElementById('returnTimeWarning').style.display = 'none';
+        
+        // Check if within 7 days
+        const orderDateTime = new Date(orderDate);
+        const currentDateTime = new Date();
+        const timeDifference = currentDateTime - orderDateTime;
+        const daysDifference = Math.floor(timeDifference / (1000 * 60 * 60 * 24));
+        
+        if (daysDifference > 7) {
+            document.getElementById('returnTimeWarning').style.display = 'block';
+            document.getElementById('returnOrderForm').style.display = 'none';
+            document.querySelector('#returnOrderModal .btn-info').style.display = 'none';
+        } else {
+            document.getElementById('returnOrderForm').style.display = 'block';
+            document.querySelector('#returnOrderModal .btn-info').style.display = 'inline-block';
+        }
+    });
+    
+    // Handle cancel reason change
+    document.getElementById('cancelReason').addEventListener('change', function() {
+        const otherDiv = document.getElementById('otherReasonDiv');
+        if (this.value === 'other') {
+            otherDiv.style.display = 'block';
+            document.getElementById('otherReason').required = true;
+        } else {
+            otherDiv.style.display = 'none';
+            document.getElementById('otherReason').required = false;
+        }
+    });
+    
+    // Handle return reason change
+    document.getElementById('returnReason').addEventListener('change', function() {
+        const otherDiv = document.getElementById('returnOtherReasonDiv');
+        if (this.value === 'other') {
+            otherDiv.style.display = 'block';
+            document.getElementById('returnOtherReason').required = true;
+        } else {
+            otherDiv.style.display = 'none';
+            document.getElementById('returnOtherReason').required = false;
+        }
+    });
+});
+
+function submitCancelOrder() {
+    const form = document.getElementById('cancelOrderForm');
+    const formData = new FormData(form);
+    
+    // Validate form
+    if (!form.checkValidity()) {
+        form.reportValidity();
+        return;
     }
+    
+    const reason = formData.get('reason');
+    const otherReason = formData.get('other_reason');
+    
+    const requestData = {
+        reason: reason,
+        other_reason: reason === 'other' ? otherReason : ''
+    };
+    
+    // Show loading state
+    const submitBtn = document.querySelector('#cancelOrderModal .btn-danger');
+    const originalText = submitBtn.innerHTML;
+    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Đang xử lý...';
+    submitBtn.disabled = true;
+    
+    fetch(`/cancel-order/${currentOrderId}/`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(requestData)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Show success message
+            const alertDiv = document.createElement('div');
+            alertDiv.className = 'alert alert-success alert-dismissible fade show';
+            alertDiv.innerHTML = `
+                <i class="fas fa-check-circle"></i> Đơn hàng đã được hủy thành công!
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+            document.querySelector('.container').insertBefore(alertDiv, document.querySelector('.container').firstChild);
+            
+            // Close modal and reload page
+            bootstrap.Modal.getInstance(document.getElementById('cancelOrderModal')).hide();
+            setTimeout(() => location.reload(), 1500);
+        } else {
+            alert(data.message || 'Có lỗi xảy ra khi hủy đơn hàng');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Có lỗi xảy ra khi hủy đơn hàng');
+    })
+    .finally(() => {
+        // Restore button state
+        submitBtn.innerHTML = originalText;
+        submitBtn.disabled = false;
+    });
+}
+
+function submitReturnRequest() {
+    const form = document.getElementById('returnOrderForm');
+    const formData = new FormData(form);
+    
+    // Validate form
+    if (!form.checkValidity()) {
+        form.reportValidity();
+        return;
+    }
+    
+    // Check all checkboxes are checked
+    const checkboxes = form.querySelectorAll('input[type="checkbox"]');
+    for (let checkbox of checkboxes) {
+        if (!checkbox.checked) {
+            alert('Vui lòng đồng ý với tất cả các điều kiện hoàn trả');
+            return;
+        }
+    }
+    
+    const reason = formData.get('reason');
+    const otherReason = formData.get('other_reason');
+    const description = formData.get('description');
+    
+    const requestData = {
+        reason: reason,
+        other_reason: reason === 'other' ? otherReason : '',
+        description: description
+    };
+    
+    // Show loading state
+    const submitBtn = document.querySelector('#returnOrderModal .btn-info');
+    const originalText = submitBtn.innerHTML;
+    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Đang gửi...';
+    submitBtn.disabled = true;
+    
+    fetch(`/request-return/${currentOrderId}/`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(requestData)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Show success message
+            const alertDiv = document.createElement('div');
+            alertDiv.className = 'alert alert-success alert-dismissible fade show';
+            alertDiv.innerHTML = `
+                <i class="fas fa-check-circle"></i> Yêu cầu hoàn trả đã được gửi thành công! Chúng tôi sẽ xem xét và phản hồi trong vòng 24h.
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+            document.querySelector('.container').insertBefore(alertDiv, document.querySelector('.container').firstChild);
+            
+            // Close modal and reload page
+            bootstrap.Modal.getInstance(document.getElementById('returnOrderModal')).hide();
+            setTimeout(() => location.reload(), 2000);
+        } else {
+            alert(data.message || 'Có lỗi xảy ra khi gửi yêu cầu hoàn trả');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Có lỗi xảy ra khi gửi yêu cầu hoàn trả');
+    })
+    .finally(() => {
+        // Restore button state
+        submitBtn.innerHTML = originalText;
+        submitBtn.disabled = false;
+    });
+}
+
+function showSuccessModal(message) {
+    document.getElementById('reorderSuccessMessage').textContent = message;
+    new bootstrap.Modal(document.getElementById('reorderSuccessModal')).show();
+}
+
+function reorderItems(orderId) {
+    // Show loading state
+    const reorderBtn = event.target;
+    const originalText = reorderBtn.innerHTML;
+    reorderBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Đang xử lý...';
+    reorderBtn.disabled = true;
+    
+    fetch(`/reorder/${orderId}/`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+            'Content-Type': 'application/json',
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Show success modal instead of alert in navbar
+            showSuccessModal(`Đã thêm ${data.items_count} sản phẩm vào giỏ hàng!`);
+            
+            // Update cart count if exists
+            const cartCount = document.querySelector('.cart-count');
+            if (cartCount) {
+                cartCount.textContent = data.cart_total_items;
+            }
+        } else {
+            alert(data.message || 'Có lỗi xảy ra khi thêm sản phẩm vào giỏ hàng');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Có lỗi xảy ra khi thêm sản phẩm vào giỏ hàng');
+    })
+    .finally(() => {
+        // Restore button state
+        reorderBtn.innerHTML = originalText;
+        reorderBtn.disabled = false;
+    });
+}
+
+// Legacy functions (kept for compatibility, but not used)
+function cancelOrder(orderId) {
+    // This function is no longer used, replaced by modal
+}
+
+function checkReturnEligibility(orderId, orderDate) {
+    // This function is no longer used, replaced by modal
 }
 
 function requestReturn(orderId) {
-    const reason = prompt('Vui lòng nhập lý do hoàn trả:');
-    if (reason && reason.trim()) {
-        fetch(`/request-return/${orderId}/`, {
-            method: 'POST',
-            headers: {
-                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                reason: reason.trim()
-            })
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                alert('Yêu cầu hoàn trả đã được gửi thành công');
-                location.reload();
-            } else {
-                alert('Có lỗi xảy ra khi gửi yêu cầu hoàn trả');
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            alert('Có lỗi xảy ra khi gửi yêu cầu hoàn trả');
-        });
-    }
+    // This function is no longer used, replaced by modal
 }
 </script>
 {% endblock %}

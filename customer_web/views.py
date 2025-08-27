@@ -7,10 +7,11 @@ from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.db.models import Q
 from django.core.paginator import Paginator
+from django.utils import timezone
 import json
 
 from .models import (
-    Category, Product, ProductImage, CustomerProfile, 
+    Category, Product, ProductImage, ProductInventory, CustomerProfile, 
     Cart, CartItem, Order, OrderItem
 )
 from admin_dashboard.models import News
@@ -151,18 +152,12 @@ def get_product_inventory(request, product_id):
                         'sku': ''
                     })
             
-            # If only size or color is provided, get all matching combinations
-            elif size or color:
+            # Return all variants for the product (for modal)
+            else:
                 inventory_items = product.inventory.all()
-                if size:
-                    inventory_items = inventory_items.filter(size=size)
-                if color:
-                    inventory_items = inventory_items.filter(color=color)
-                
-                total_quantity = sum(item.quantity for item in inventory_items)
-                items_data = []
+                variants = []
                 for item in inventory_items:
-                    items_data.append({
+                    variants.append({
                         'size': item.size,
                         'color': item.color,
                         'quantity': item.quantity,
@@ -171,24 +166,7 @@ def get_product_inventory(request, product_id):
                 
                 return JsonResponse({
                     'success': True,
-                    'total_quantity': total_quantity,
-                    'items': items_data
-                })
-            
-            # Return all inventory for the product
-            else:
-                inventory_items = product.inventory.all()
-                inventory_data = {}
-                for item in inventory_items:
-                    key = f"{item.size}-{item.color}"
-                    inventory_data[key] = {
-                        'quantity': item.quantity,
-                        'sku': item.sku
-                    }
-                
-                return JsonResponse({
-                    'success': True,
-                    'inventory': inventory_data
+                    'variants': variants
                 })
                 
         except Exception as e:
@@ -206,12 +184,35 @@ def add_to_cart(request):
         try:
             data = json.loads(request.body)
             product_id = data.get('product_id')
-            size = data.get('size', '')
-            color = data.get('color', '')
-            quantity = int(data.get('quantity', 1))
+            size = data.get('size', None)
+            color = data.get('color', None)
+            try:
+                quantity = max(1, int(data.get('quantity', 1)))
+            except (ValueError, TypeError):
+                return JsonResponse({'success': False, 'message': 'Số lượng không hợp lệ'})
+            
+            # Validate required fields
+            if not size:
+                return JsonResponse({'success': False, 'message': 'Vui lòng chọn kích thước'})
             
             product = get_object_or_404(Product, id=product_id)
             cart = get_or_create_cart(request)
+            
+            # Check inventory
+            from customer_web.models import ProductInventory
+            try:
+                inventory = ProductInventory.objects.get(
+                    product=product,
+                    size=size,
+                    color=color or ''
+                )
+                if inventory.quantity < quantity:
+                    return JsonResponse({
+                        'success': False, 
+                        'message': f'Chỉ còn {inventory.quantity} sản phẩm trong kho'
+                    })
+            except ProductInventory.DoesNotExist:
+                return JsonResponse({'success': False, 'message': 'Sản phẩm không có sẵn với thông số này'})
             
             # Check if item already exists in cart
             cart_item, created = CartItem.objects.get_or_create(
@@ -229,7 +230,7 @@ def add_to_cart(request):
             return JsonResponse({
                 'success': True,
                 'message': 'Đã thêm vào giỏ hàng',
-                'cart_total': cart.total_items
+                'cart_total_items': cart.total_items
             })
             
         except Exception as e:
@@ -426,6 +427,11 @@ def checkout_view(request):
         messages.error(request, 'Giỏ hàng trống!')
         return redirect('customer_web:cart')
     
+    # Get user profile for auto-fill if authenticated
+    user_profile = None
+    if request.user.is_authenticated:
+        user_profile, created = CustomerProfile.objects.get_or_create(user=request.user)
+    
     if request.method == 'POST':
         # Create order
         full_name = request.POST.get('full_name')
@@ -433,6 +439,7 @@ def checkout_view(request):
         phone = request.POST.get('phone')
         address = request.POST.get('address')
         notes = request.POST.get('notes', '')
+        payment_method = request.POST.get('payment_method', 'cod')
         
         order = Order.objects.create(
             user=request.user if request.user.is_authenticated else None,
@@ -442,6 +449,7 @@ def checkout_view(request):
             email=email,
             phone=phone,
             address=address,
+            payment_method=payment_method,
             total_amount=cart.total_price,
             notes=notes
         )
@@ -457,9 +465,26 @@ def checkout_view(request):
                 price=item.product.get_price
             )
             
-            # Update stock
-            item.product.stock -= item.quantity
-            item.product.save()
+            # Update ProductInventory instead of Product.stock
+            try:
+                inventory = ProductInventory.objects.get(
+                    product=item.product,
+                    size=item.size,
+                    color=item.color
+                )
+                inventory.quantity -= item.quantity
+                inventory.save()
+            except ProductInventory.DoesNotExist:
+                # Create new inventory with 0 quantity (deficit)
+                from admin_dashboard.views import generate_unique_sku
+                sku = generate_unique_sku(item.product, item.color, item.size)
+                ProductInventory.objects.create(
+                    product=item.product,
+                    size=item.size,
+                    color=item.color,
+                    quantity=-item.quantity,  # Negative to indicate deficit
+                    sku=sku
+                )
         
         # Clear cart
         cart.items.all().delete()
@@ -469,6 +494,7 @@ def checkout_view(request):
     
     context = {
         'cart': cart,
+        'user_profile': user_profile,
     }
     return render(request, 'customer_web/checkout.html', context)
 
@@ -488,6 +514,208 @@ def order_history(request):
         'orders': orders,
     }
     return render(request, 'customer_web/order_history.html', context)
+
+# Cancel order
+@login_required
+@csrf_exempt
+def cancel_order(request, order_id):
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            reason = data.get('reason', '')
+            other_reason = data.get('other_reason', '')
+            
+            order = get_object_or_404(Order, order_id=order_id, user=request.user)
+            
+            # Check if order can be cancelled
+            if order.status not in ['pending', 'confirmed']:
+                return JsonResponse({
+                    'success': False,
+                    'message': 'Đơn hàng này không thể hủy'
+                })
+            
+            # Prepare cancel reason text
+            cancel_reason_text = reason
+            if reason == 'other' and other_reason:
+                cancel_reason_text = f"Lý do khác: {other_reason}"
+            elif reason == 'changed_mind':
+                cancel_reason_text = "Đổi ý không muốn mua"
+            elif reason == 'found_better_price':
+                cancel_reason_text = "Tìm được giá tốt hơn"
+            elif reason == 'ordered_wrong':
+                cancel_reason_text = "Đặt nhầm sản phẩm"
+            elif reason == 'delivery_too_long':
+                cancel_reason_text = "Thời gian giao hàng quá lâu"
+            
+            # Update order status
+            order.status = 'cancelled'
+            order.cancel_reason = cancel_reason_text
+            order.cancelled_at = timezone.now()
+            order.save()
+            
+            # Restore ProductInventory stock
+            for item in order.items.all():
+                try:
+                    inventory = ProductInventory.objects.get(
+                        product=item.product,
+                        size=item.size,
+                        color=item.color
+                    )
+                    inventory.quantity += item.quantity
+                    inventory.save()
+                except ProductInventory.DoesNotExist:
+                    # Create new inventory if not exists
+                    from admin_dashboard.views import generate_unique_sku
+                    sku = generate_unique_sku(item.product, item.color, item.size)
+                    ProductInventory.objects.create(
+                        product=item.product,
+                        size=item.size,
+                        color=item.color,
+                        quantity=item.quantity,
+                        sku=sku
+                    )
+            
+            return JsonResponse({'success': True})
+            
+        except Exception as e:
+            return JsonResponse({'success': False, 'message': str(e)})
+    
+    return JsonResponse({'success': False, 'message': 'Method not allowed'})
+
+# Request return
+@login_required
+@csrf_exempt
+def request_return(request, order_id):
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            reason = data.get('reason', '')
+            other_reason = data.get('other_reason', '')
+            description = data.get('description', '')
+            
+            order = get_object_or_404(Order, order_id=order_id, user=request.user)
+            
+            # Check if order can be returned
+            if order.status != 'delivered':
+                return JsonResponse({
+                    'success': False,
+                    'message': 'Chỉ có thể yêu cầu hoàn trả đơn hàng đã giao'
+                })
+            
+            # Check 7-day limit on server side as well
+            days_since_order = (timezone.now() - order.created_at).days
+            if days_since_order > 7:
+                return JsonResponse({
+                    'success': False,
+                    'message': 'Đã hết hạn yêu cầu hoàn hàng. Thời gian hoàn trả chỉ có hiệu lực trong vòng 7 ngày.'
+                })
+            
+            # Prepare return reason text
+            return_reason_text = reason
+            if reason == 'other' and other_reason:
+                return_reason_text = f"Lý do khác: {other_reason}"
+            elif reason == 'defective':
+                return_reason_text = "Sản phẩm bị lỗi/hư hỏng"
+            elif reason == 'wrong_item':
+                return_reason_text = "Gửi sai sản phẩm"
+            elif reason == 'not_as_described':
+                return_reason_text = "Sản phẩm không đúng mô tả"
+            elif reason == 'size_issue':
+                return_reason_text = "Sai size/không vừa"
+            elif reason == 'quality_issue':
+                return_reason_text = "Chất lượng không như mong đợi"
+            elif reason == 'changed_mind':
+                return_reason_text = "Đổi ý không muốn sản phẩm"
+            
+            # Combine reason and description
+            full_return_reason = f"{return_reason_text}\nMô tả chi tiết: {description}"
+            
+            # Update order status and save return info
+            order.status = 'return_requested'
+            order.return_reason = full_return_reason
+            order.return_requested_at = timezone.now()
+            order.save()
+            
+            return JsonResponse({'success': True})
+            
+        except Exception as e:
+            return JsonResponse({'success': False, 'message': str(e)})
+    
+    return JsonResponse({'success': False, 'message': 'Method not allowed'})
+
+# Reorder items from previous order
+@login_required
+@csrf_exempt
+def reorder_items(request, order_id):
+    if request.method == 'POST':
+        try:
+            order = get_object_or_404(Order, order_id=order_id, user=request.user)
+            
+            # Check if order is delivered (only delivered orders can be reordered)
+            if order.status != 'delivered':
+                return JsonResponse({
+                    'success': False,
+                    'message': 'Chỉ có thể mua lại đơn hàng đã giao thành công'
+                })
+            
+            # Get or create cart for user
+            cart, created = Cart.objects.get_or_create(user=request.user)
+            
+            items_added = 0
+            items_skipped = 0
+            
+            # Add each order item to cart
+            for order_item in order.items.all():
+                # Check if product is still active and available
+                if not order_item.product.is_active:
+                    items_skipped += 1
+                    continue
+                
+                # Check if there's enough inventory
+                try:
+                    inventory = ProductInventory.objects.get(
+                        product=order_item.product,
+                        size=order_item.size,
+                        color=order_item.color
+                    )
+                    if inventory.quantity < order_item.quantity:
+                        items_skipped += 1
+                        continue
+                except ProductInventory.DoesNotExist:
+                    items_skipped += 1
+                    continue
+                
+                # Check if item already exists in cart
+                cart_item, item_created = CartItem.objects.get_or_create(
+                    cart=cart,
+                    product=order_item.product,
+                    size=order_item.size,
+                    color=order_item.color,
+                    defaults={'quantity': order_item.quantity}
+                )
+                
+                if not item_created:
+                    # If item exists, increase quantity
+                    cart_item.quantity += order_item.quantity
+                    cart_item.save()
+                
+                items_added += 1
+            
+            message = f'Đã thêm {items_added} sản phẩm vào giỏ hàng!'
+            if items_skipped > 0:
+                message += f' ({items_skipped} sản phẩm không khả dụng)'
+            
+            return JsonResponse({
+                'success': True,
+                'message': message,
+                'items_count': items_added,
+                'cart_total_items': cart.total_items
+            })
+            
+        except Exception as e:
+            return JsonResponse({'success': False, 'message': str(e)})
+    
+    return JsonResponse({'success': False, 'message': 'Method not allowed'})
 
 # News views
 def news_list(request):
