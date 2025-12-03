@@ -24,7 +24,7 @@ A modern Django-based e-commerce platform specializing in Korean fashion for chi
 
 - **Backend**: Django 4.x
 - **Frontend**: Bootstrap 5, HTML5, CSS3, JavaScript
-- **Database**: SQLite (development)
+- **Database**: PostgreSQL (development)
 - **Icons**: Font Awesome 6
 - **Fonts**: Google Fonts (Nunito)
 
