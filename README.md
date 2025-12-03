@@ -125,3 +125,9 @@ This is a personal project, but suggestions and feedback are welcome!
 - **Theme**: Korean Fashion for Children
 - **Target**: Modern, responsive e-commerce platform
 - **Style**: Clean, colorful, user-friendly design
+![Homepage Desktop](image.png)
+![Homepage Mobile](image-1.png)
+![Product list](image-3.png)
+![Product detail](image-2.png)
+![Shopping cart](image-4.png)
+![Admin Dashboard](image-5.png)
