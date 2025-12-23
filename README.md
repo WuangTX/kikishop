@@ -131,3 +131,4 @@ This is a personal project, but suggestions and feedback are welcome!
 ![Product detail](image-2.png)
 ![Shopping cart](image-4.png)
 ![Admin Dashboard](image-5.png)
+![Staff Portal](image-6.png)
