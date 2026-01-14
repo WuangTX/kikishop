@@ -86,7 +86,6 @@ kiki_shop/
 ├── media/                 # User uploaded files
 └── manage.py             # Django management script
 ```
-
 ## 🎨 Key Components
 
 ### Navigation
